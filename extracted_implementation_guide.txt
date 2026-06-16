@@ -1,0 +1,249 @@
+Multi-Tenant Chatbot SaaS Platform
+Implementation & Integration Guide
+A comprehensive blueprint for AI agents and developers to build, configure, and deploy a standalone, secure, multi-tenant Chatbot-as-a-Service (SaaS) system.
+1. Architectural Blueprint
+The Multi-Tenant Chatbot SaaS Platform is structured as three distinct, modular components designed to run as a standalone ecosystem. By exposing a lightweight compiled JavaScript widget, tenants can enable context-aware AI support on any client website while managing settings, routes, and billing from a central control dashboard.
+The system comprises the following components:
+1. chatbot-saas-platform (Backend): A robust Django REST Framework service that handles API key issuance, rate limiting, client domain validation (CORS), prompt assembly, Celery usage metrics logging, and graph database storage integration (Neo4j).
+2. chatbot-saas-widget (Embedded Frontend): A highly optimized Vite + TypeScript library compiled into a single static JS bundle. It loads on tenant websites, monitors user navigation, compiles DOM knowledge (headings, buttons, forms, instructions) using an accessibility-friendly scanner, and communicates dynamically with the backend.
+3. chatbot-saas-dashboard (Tenant Portal): A Tailwind CSS-styled React application that lets tenants sign up, purchase API quotas via Stripe, customize the visual widget, edit routes/allowed roles, view usage history, and configure specialized graph embeddings.
+2. Relational Database Design (PostgreSQL)
+Multi-tenant isolation in the relational layer is achieved through client partitioning (foreign key association with the Tenant model). This ensures that configurations, analytics, and scraped content remain private to each client.
+Here is the relational database layout for the critical tables:
+3. Backend Implementation Details (chatbot-saas-platform)
+Tenant and API Key Resolution Middleware
+Every incoming widget request carries a Bearer Token representing the client API key. The platform uses custom middleware to validate the key, enforce client-scoped CORS constraints, check monthly message budgets, and rate limit incoming queries.
+API Key Extraction and CORS validation middleware example:
+Graph Database Isolation (Neo4j)
+To support structured, role-aware answers and navigation, tenants can build mapping subgraphs in a Neo4j instance. The subgraph maps: (Role)-[:CAN_ACCESS]->(Page)-[:HAS_ACTION]->(Action)-[:NAVIGATES_TO]->(Page).
+For multi-tenancy, you can choose between two main models:
+1. Database-Per-Tenant: Each tenant is routed to a distinct database instance inside a shared cluster (e.g. via dynamic session selection with `ensure_tenant_database(tenant)`). Ideal for enterprise grade data separation.
+2. Shared Database (Namespace Property): All tenants share a single database, and every node and relationship carries a `tenant_id` property. All Cypher queries must append `WHERE node.tenant_id = $tenant_id` filters to prevent cross-tenant leakage. Ideal for lower cost tiers.
+Dynamic connection pool handling is required to prevent pool exhaustion on serverless hosting:
+Dynamic System Prompt Compiler
+When a client widget makes a `/api/v1/chat/message/` call, the backend aggregates multiple sources of context to construct a customized instruction set for the LLM. It merges:
+• Custom system instructions: Defined by the tenant in the dashboard.
+• Live page context: The DOM components scanned by the widget on the user's active viewport.
+• Role definitions: Allowed behaviors and navigation privileges matching the user's active persona.
+• Navigation mapping: A map of registered routes to filter valid navigation anchors.
+• Neo4j role context: Cypher query outputs describing accessible subgraphs.
+The LLM is strictly instructed to append suggestions in a parseable format: `[NAVIGATE:url|title]` which the backend parses, validates, and forwards to the widget for SPA routing.
+4. Standalone Embedded JS Widget (chatbot-saas-widget)
+The widget is a compiled, production-ready bundle. Clients load it on their sites using a single script tag:
+DOM Scanner and Accessibility Parser
+To extract accurate metadata without capturing structural layouts or heavy markup noise, the scanner utilizes strict DOM filtering. It ignores structural tags (footer, nav, style, SVG elements) and retrieves titles, labels, placeholders, aria-labels, and forms.
+Accessibility name parser snippet:
+Reactive Page Training Hooks
+To sync page structures dynamically on Single Page Apps (SPAs), the widget sets up navigation interception. It patches `history.pushState` and `history.replaceState`, listens to `popstate` events, and observes DOM updates via `MutationObserver`.
+To prevent flooding the backend with network calls on minor UI changes, a SHA-256 hash/fingerprint of the extracted context is stored in `sessionStorage`. Training calls only execute when the fingerprint changes.
+SPA Navigation Interceptor and Event Dispatcher
+When the bot returns navigation instructions, the widget triggers a custom navigation event: `dlc:navigate`. The widget captures it, performs SPA history transitions, and dispatches a popstate event to let routing engines like React Router respond instantly.
+5. Dashboard Control Panel (chatbot-saas-dashboard)
+The dashboard application provides the visual control tower for SaaS clients. It contains:
+• API Keys Management: Generates keys, lists prefixes, logs last-used dates, and allows CORS origin overrides.
+• Knowledge Base & Scraper: Allows manual link scraping or shows route mappings trained automatically by client widgets.
+• Route & Role Configuration: Provides visual forms to register URLs, describe page capabilities, and restrict routes to allowed user permissions.
+• Graph Visualizer & Seed Tool: Uploads graph relationship JSONs and queries database size statistics.
+• Billing Portal: Uses Stripe checkout sessions to manage tier plans and purchase extra message token limits.
+• Superadmin Dashboard: A master interface to review overall platform statistics, activate/deactivate tenants, and oversee system token expenses.
+6. Step-by-Step Implementation Runbook
+Below is the execution checklist designed to guide an AI agent or developer to configure the multi-tenant SaaS project from scratch:
+Step 1: Setup Multi-Tenant Database schemas. Deploy PostgreSQL and run migrations for tenant, api_key, route_entry, role_config, and knowledge_base_entry models.
+Step 2: Configure API Gateway middleware. Write the ApiKeyAuthMiddleware, RateLimitMiddleware (Redis backed), QuotaMiddleware, and CorsOriginMiddleware inside the API gateway app. Set up settings.py to install them.
+Step 3: Setup Neo4j graph connector. Implement pool-recycled connections in neo4j_utils.py with a database-per-tenant name resolver.
+Step 4: Build prompt compiler and chat proxy views. Create chat_message and train_page endpoints. Integrate Gemini Generative Model API to compile contextual system prompts and parse routing suggestions.
+Step 5: Bundle standalone widget code. Configure Vite to compile index.ts, scanner.ts, training.ts, and ui.ts into a single bundled widget.js using UMD/IIFE packaging. Host it via CDN or Django static assets.
+Step 6: Deploy React Dashboard. Build settings forms, script embed helper code widgets, billing models, and analytics chart panels.
+Step 7: Conduct E2E Verification. Set up a mock site, include the script tag with the tenant's API Key, navigate, and confirm that DOM scanners sync metadata with the PostgreSQL database and the bot successfully triggers client SPA routing updates.
+Table Name
+Field
+Data Type
+Role & Description
+tenant
+id
+name
+plan
+monthly_message_quota
+allowed_origins
+custom_system_prompt_override
+neo4j_uri / user / password
+UUID (PK)
+CharField
+CharField
+IntegerField
+TextField
+TextField
+CharField
+Uniquely identifies the client workspace.
+Stores tenant name, tier subscription,
+allowed CORS origins (newline-separated),
+system prompt template overrides, and
+tenant-specific graph credentials.
+api_key
+id
+tenant_id
+key_hash
+prefix
+name
+is_active
+allowed_origins
+UUID (PK)
+ForeignKey (tenant)
+CharField (unique, indexed)
+CharField (8 chars)
+CharField
+BooleanField
+TextField
+Authorizes widget requests dynamically.
+Uses prefix matching for logging. Hashed
+using SHA-256 for secure lookup.
+Overrides tenant origins if specified.
+route_entry
+id
+tenant_id
+path
+name
+description
+allowed_roles
+is_active
+sort_order
+UUID (PK)
+ForeignKey (tenant)
+CharField
+CharField
+TextField
+JSONField
+BooleanField
+IntegerField
+Stores human-defined website map.
+Allowed roles (e.g. ['admin', 'student'])
+is passed to the prompt generator to control
+navigation suggestion visibility.
+role_config
+id
+tenant_id
+name
+display_name
+description
+is_active
+UUID (PK)
+ForeignKey (tenant)
+CharField
+CharField
+TextField
+BooleanField
+Defines custom user personas.
+Injected into the prompt compiler to scope
+LLM answers for target audiences.
+knowledge_base_entry
+id
+tenant_id
+url
+title\content
+extracted_links
+is_active
+UUID (PK)
+ForeignKey (tenant)
+URLField
+CharField
+TextField
+JSONField
+BooleanField
+Holds scraped HTML document contents
+and navigation anchors extracted via
+background scraping scripts.
+# api_gateway/middleware.py
+import hashlib
+from django.http import JsonResponse
+from django.utils.deprecation import MiddlewareMixin
+from tenant_manager.models import ApiKey
+
+class ApiKeyAuthMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        # Allow exempt endpoints (health checks, webhooks)
+        if request.path.startswith('/health/') or request.path.startswith('/api/v1/billing/webhook/'):
+            return None
+
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return JsonResponse({'error': 'Missing or invalid Authorization header'}, status=401)
+        
+        raw_token = auth_header[7:]
+        key_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+        
+        try:
+            api_key = ApiKey.objects.select_related('tenant').get(key_hash=key_hash, is_active=True)
+            if not api_key.tenant.is_active:
+                return JsonResponse({'error': 'Tenant account is deactivated'}, status=401)
+            
+            # Mount verified objects on request context
+            request.tenant = api_key.tenant
+            request.api_key = api_key
+            return None
+        except ApiKey.DoesNotExist:
+            return JsonResponse({'error': 'Invalid or expired API key'}, status=401)
+
+[IMPORTANT] Always use SHA-256 to hash the API keys before performing lookups in the PostgreSQL database. Never store raw API keys in plain text.
+# chat_proxy/neo4j_utils.py
+import os
+from neo4j import GraphDatabase
+
+_drivers = {}
+
+def get_tenant_driver(tenant):
+    tenant_id = str(tenant.id)
+    if tenant_id not in _drivers:
+        # Fall back to global env credentials if tenant has not configured custom Neo4j
+        uri = tenant.neo4j_uri or os.environ.get("NEO4J_URI")
+        user = tenant.neo4j_user or os.environ.get("NEO4J_USER", "neo4j")
+        password = tenant.neo4j_password or os.environ.get("NEO4J_PASSWORD")
+        
+        if not uri or not password:
+            return None
+            
+        _drivers[tenant_id] = GraphDatabase.driver(
+            uri, 
+            auth=(user, password),
+            max_connection_lifetime=120.0, # Recycle idle connections
+            connection_timeout=15.0
+        )
+    return _drivers[tenant_id]
+
+<!-- Embedded script loader in tenant's site -->
+<script>
+  window.ChatbotConfig = {
+    apiKey: 'dlk_8408_3cf8b2ea1bc7f4e85d9921',
+    baseUrl: 'https://api.chatbotsaas.com',
+    role: 'student', // Contextual role override
+    enablePageTraining: true
+  };
+</script>
+<script src="https://cdn.chatbotsaas.com/widget.js" async></script>
+
+// src/scanner.ts
+export function getAccessibleName(el: Element): string {
+  if (!el) return '';
+
+  const ariaLabel = el.getAttribute('aria-label');
+  if (ariaLabel && isTextMeaningful(ariaLabel)) return ariaLabel;
+
+  const ariaLabelledby = el.getAttribute('aria-labelledby');
+  if (ariaLabelledby) {
+    const ids = ariaLabelledby.split(/\s+/).filter(Boolean);
+    const parts = ids
+      .map(id => document.getElementById(id))
+      .filter(Boolean)
+      .map(node => normalizeText(node!.textContent || ''));
+    const combined = parts.filter(Boolean).join(' ');
+    if (combined && isTextMeaningful(combined)) return combined;
+  }
+
+  if (el.id) {
+    const label = document.querySelector(`label[for="\${el.id}"]`);
+    const t = label ? normalizeText(label.textContent || '') : '';
+    if (t && isTextMeaningful(t)) return t;
+  }
+
+  return normalizeText(el.textContent || '');
+}
+

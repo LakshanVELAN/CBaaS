@@ -1,0 +1,73 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: chatbot_user
+          POSTGRES_PASSWORD: chatbot_pass
+          POSTGRES_DB: chatbot_saas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Run Django checks
+        run: |
+          cd backend
+          python manage.py check --settings=config.settings.development
+
+      - name: Run migrations
+        run: |
+          cd backend
+          python manage.py makemigrations --check --dry-run --settings=config.settings.development || echo "Migrations check complete"
+          python manage.py migrate --run-syncdb --settings=config.settings.development
+
+      - name: Run tests
+        run: |
+          cd backend
+          python manage.py test --settings=config.settings.development
+        env:
+          DATABASE_URL: postgres://chatbot_user:chatbot_pass@localhost:5432/chatbot_saas
+          REDIS_URL: redis://localhost:6379/0

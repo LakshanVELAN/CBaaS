@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatbot Widget — Dev</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; color: #333; }
+    h1 { margin-bottom: 8px; }
+    p { line-height: 1.6; color: #666; }
+    section { margin: 32px 0; padding: 24px; background: #f9fafb; border-radius: 8px; }
+    button { padding: 8px 16px; background: #1a56db; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #1648c0; }
+  </style>
+</head>
+<body>
+  <h1>Chatbot Widget — Dev Page</h1>
+  <p>Open the chat widget by clicking the chat icon in the bottom-right corner.</p>
+
+  <section>
+    <h2>Dashboard</h2>
+    <p>Welcome to your dashboard. Here you can manage your account settings.</p>
+    <button onclick="alert('Settings clicked')">Settings</button>
+    <button onclick="alert('Profile clicked')">Profile</button>
+  </section>
+
+  <section>
+    <h2>Getting Started</h2>
+    <ol>
+      <li>First, create your account</li>
+      <li>Then, configure your API keys</li>
+      <li>Finally, embed the widget on your site</li>
+    </ol>
+    <button onclick="alert('Get Started clicked')">Get Started</button>
+  </section>
+
+  <section>
+    <h2>Billing</h2>
+    <p>View your current plan and usage. Upgrade when you need more.</p>
+    <table>
+      <tr><th>Plan</th><th>Messages</th><th>Price</th></tr>
+      <tr><td>Free</td><td>500/mo</td><td>$0</td></tr>
+      <tr><td>Pro</td><td>25,000/mo</td><td>$99</td></tr>
+    </table>
+  </section>
+
+  <script>
+    window.ChatbotConfig = {
+      apiKey: 'dlk_576c6fca_566b91e48bc764fff67bbd5c58ab024e',
+      baseUrl: 'http://localhost:8000',
+      botName: 'Support Bot',
+      primaryColor: '#6366f1',
+      position: 'bottom-right',
+      role: 'admin',
+      enablePageTraining: false,
+      welcomeMessage: 'Hi there! How can I help you navigate this site?',
+      suggestionChips: ['What can I do here?', 'Show me the dashboard', 'Help with billing'],
+    };
+  </script>
+  <script type="module" src="/src/index.ts"></script>
+</body>
+</html>
