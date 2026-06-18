@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { useEffect } from 'react';
-import { MessageSquare, Brain, KeyRound, BookOpen, Map, BarChart3, CreditCard, Rocket, Lock, Zap, Clock, CheckCircle, ArrowRight } from 'lucide-react';
+import { MessageSquare, Brain, KeyRound, BookOpen, Map, BarChart3, CreditCard, Rocket, Lock, Zap, Clock, CheckCircle } from 'lucide-react';
 
 const FEATURES = [
   {

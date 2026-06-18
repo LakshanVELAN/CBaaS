@@ -126,7 +126,7 @@ export default function Playground() {
               className="btn btn-secondary btn-sm"
               onClick={() => setShowRolePicker(!showRolePicker)}
             >
-              👤 {selectedRole}
+              <User size={14} /> {selectedRole}
             </button>
             {showRolePicker && (
               <div className="playground-role-dropdown">
@@ -146,14 +146,14 @@ export default function Playground() {
             )}
           </div>
           <button className="btn btn-secondary btn-sm" onClick={clearChat}>
-            🗑️ Clear Chat
+            <Trash2 size={14} /> Clear Chat
           </button>
         </div>
       </div>
 
       {tenant?.plan === 'free' && (
         <div className="playground-banner">
-          ⚡ You're on the <strong>Free</strong> plan. Upgrade to increase your message quota.
+          <Zap size={14} /> You're on the <strong>Free</strong> plan. Upgrade to increase your message quota.
         </div>
       )}
 
@@ -182,7 +182,7 @@ export default function Playground() {
                   <div className="chat-msg-footer">
                     {msg.tokenUsage && (
                       <span className="chat-msg-tokens" title={`Prompt: ${msg.tokenUsage.prompt_tokens} · Completion: ${msg.tokenUsage.completion_tokens} · Cost: $${msg.tokenUsage.cost.toFixed(6)}`}>
-                        ⚡ {msg.tokenUsage.total_tokens} tokens · ${msg.tokenUsage.cost.toFixed(6)}
+                        <Zap size={12} /> {msg.tokenUsage.total_tokens} tokens · ${msg.tokenUsage.cost.toFixed(6)}
                       </span>
                     )}
                     <button
@@ -190,7 +190,7 @@ export default function Playground() {
                       onClick={() => copyMessage(msg.content)}
                       title="Copy message"
                     >
-                      📋
+                      <Copy size={14} />
                     </button>
                   </div>
                 </div>

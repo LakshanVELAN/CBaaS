@@ -84,7 +84,11 @@ export default function ApiKeys() {
                 <code>{revealedKey}</code>
                 <button
                   className="btn btn-sm"
-                  onClick={() => navigator.clipboard.writeText(revealedKey)}
+                  onClick={() => {
+                    navigator.clipboard.writeText(revealedKey);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
                 >
                   {copied ? <Check size={14} /> : <Copy size={14} />}
                 </button>
