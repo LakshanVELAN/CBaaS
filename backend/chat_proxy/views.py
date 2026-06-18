@@ -88,15 +88,20 @@ def chat_message(request):
     # If Neo4j has context, don't include scraped KB content in the prompt
     kb_entries_for_prompt = [] if neo4j_context else kb_entries
 
-    # Fetch route registry entries
+    # Fetch route registry entries — filter to only include routes
+    # accessible by the current role (or routes with no role restriction)
     route_objects = RouteEntry.objects.filter(
         tenant=tenant, is_active=True
     ).values('path', 'name', 'description', 'allowed_roles')[:100]
-    route_entries = list(route_objects)
+    route_entries = [
+        r for r in route_objects
+        if not r.get('allowed_roles') or role in r.get('allowed_roles', [])
+    ]
 
-    # Fetch role configs
+    # Fetch role configs — only include the current user's role so the bot
+    # doesn't reveal info about other roles the user shouldn't know about
     role_objects = RoleConfig.objects.filter(
-        tenant=tenant, is_active=True
+        tenant=tenant, is_active=True, name=role
     ).values('name', 'display_name', 'description')[:20]
     role_entries = list(role_objects)
 

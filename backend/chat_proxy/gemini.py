@@ -72,19 +72,24 @@ def build_system_prompt(
         "Only suggest navigation when it's genuinely helpful."
     )
 
-    # 3. Role-based context
+    # 3. Current user's role context
     if role_entries:
-        parts.append("\n\n--- Role Definitions ---")
+        parts.append("\n\n--- Current User Role ---")
+        role = role_entries[0]
+        name = role.get('name', '')
+        display = role.get('display_name', name)
+        desc = role.get('description', '')
         parts.append(
-            "This platform has the following user roles. "
-            "Tailor your responses based on what each role can access:\n"
+            f"The current user has the role **{display}** ({name}). "
+            f"{desc}"
         )
-        for role in role_entries:
-            name = role.get('name', '')
-            display = role.get('display_name', name)
-            desc = role.get('description', '')
-            parts.append(f"- {display} ({name}): {desc}")
-        parts.append("--- End Role Definitions ---")
+        parts.append(
+            "\n**IMPORTANT**: You MUST ONLY answer questions about what THIS role can access. "
+            "Do NOT describe other roles, their capabilities, or their accessible pages. "
+            "If a user asks about another role's access, say you cannot answer that. "
+            "Stay strictly within this role's scope."
+        )
+        parts.append("--- End Current User Role ---")
 
     # 4. Route registry context
     if route_entries:
