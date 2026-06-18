@@ -1,6 +1,8 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.http import JsonResponse
+
+from config.spa_views import serve_spa
 
 
 def health_check(request):
@@ -22,4 +24,8 @@ urlpatterns = [
     path('api/v1/analytics/', include('analytics.urls')),
     path('api/v1/billing/', include('billing.urls')),
     path('api/v1/superadmin/', include('superadmin.urls')),
+
+    # Catch-all: Serve React SPA for all other routes
+    # This must be the LAST pattern in urlpatterns
+    re_path(r'^(?P<path>.*)$', serve_spa, name='spa-catch-all'),
 ]

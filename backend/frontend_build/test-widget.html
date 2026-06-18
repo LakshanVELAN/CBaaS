@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Widget Test Page</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    h1 { font-size: 24px; margin-bottom: 12px; color: #1f2937; }
+    p { color: #6b7280; line-height: 1.6; margin-bottom: 8px; }
+    .badge {
+      display: inline-block;
+      background: #6366f1;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .browser-frame {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    .browser-bar {
+      background: #f3f4f6;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+    .url-bar {
+      flex: 1;
+      background: white;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+    }
+    .browser-content {
+      padding: 40px 20px;
+      background: #f9fafb;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      font-size: 14px;
+    }
+    .instructions {
+      margin-top: 24px;
+      padding: 16px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      text-align: left;
+    }
+    .instructions code {
+      display: block;
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin: 8px 0;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">🧪 Widget Test Page</div>
+    <h1>Demo Site</h1>
+    <p>This page simulates your demo site. The chatbot widget should appear as a floating bubble at the bottom-right corner.</p>
+    <p>If you see the 💬 icon, the widget is working!</p>
+
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="url-bar">demo-site.com</span>
+      </div>
+      <div class="browser-content">
+        🌐 Your website content here
+      </div>
+    </div>
+
+    <div class="instructions">
+      <strong>✅ Widget active below</strong>
+      <p style="margin-top: 8px; font-size: 13px; color: #059669;">
+        Look at the <strong>bottom-right corner</strong> of this page for the chat bubble.
+      </p>
+      <p style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+        Widget loaded from: <code style="display: inline; padding: 2px 6px; font-size: 11px;">http://localhost:3000/widget.js</code>
+      </p>
+    </div>
+  </div>
+
+  <!-- Chatbot SaaS Widget Embed -->
+  <script>
+    (function() {
+      var s = document.createElement('script');
+      s.src = 'http://localhost:3000/widget.js';
+      s.async = true;
+      s.dataset.apiKey = 'test_api_key';
+      s.dataset.theme = 'light';
+      s.dataset.position = 'bottom-right';
+      s.dataset.size = 'md';
+      s.dataset.primaryColor = '#6366f1';
+      s.dataset.botName = 'Test Bot';
+      var x = document.getElementsByTagName('script')[0];
+      x.parentNode.insertBefore(s, x);
+    })();
+  </script>
+  <!-- End Chatbot SaaS Widget -->
+</body>
+</html>
