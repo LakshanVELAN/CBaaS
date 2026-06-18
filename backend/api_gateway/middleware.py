@@ -17,6 +17,7 @@ class ApiKeyAuthMiddleware(MiddlewareMixin):
         '/api/v1/tenants/login/',
         '/api/v1/billing/webhook/',
         '/admin/',
+        '/api/v1/superadmin/',
     ]
 
     def _authenticate_jwt(self, token):
