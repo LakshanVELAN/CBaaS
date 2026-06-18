@@ -61,7 +61,6 @@ window.ChatbotConfig = {
   botName: '${botName || 'Assistant'}',
   primaryColor: '${primaryColor}',
   position: '${position}',
-  role: 'guest',
   welcomeMessage: '${welcomeMessage.replace(/'/g, "\\'")}',
   suggestionChips: ${JSON.stringify(suggestionChips)}
 };
