@@ -528,3 +528,125 @@ export async function uploadKnowledge(data: Record<string, unknown>) {
   });
 }
 
+// ── Super Admin ──
+
+export interface SuperAdminUser {
+  id: number;
+  email: string;
+  name: string;
+}
+
+export interface SuperAdminLoginResponse {
+  user: SuperAdminUser;
+  tokens: { access: string; refresh: string };
+}
+
+export interface PlatformStats {
+  total_tenants: number;
+  active_tenants: number;
+  suspended_tenants: number;
+  plan_breakdown: Record<string, number>;
+  recent_tenants_30d: number;
+  total_messages: number;
+  total_tokens: number;
+  total_cost: number;
+}
+
+export interface SuperAdminTenant {
+  id: string;
+  name: string;
+  plan: string;
+  is_active: boolean;
+  total_messages: number;
+  created_at: string;
+}
+
+export interface TenantToggleResponse {
+  message: string;
+  is_active: boolean;
+}
+
+// Separate token storage from regular tenant auth
+function getSuperAdminToken(): string | null {
+  const stored = localStorage.getItem('dlc_sa_tokens');
+  if (!stored) return null;
+  try {
+    return JSON.parse(stored).access;
+  } catch {
+    return null;
+  }
+}
+
+export function setSuperAdminTokens(tokens: { access: string; refresh: string }) {
+  localStorage.setItem('dlc_sa_tokens', JSON.stringify(tokens));
+}
+
+export function clearSuperAdminTokens() {
+  localStorage.removeItem('dlc_sa_tokens');
+}
+
+export function isSuperAdminAuthenticated(): boolean {
+  return !!getSuperAdminToken();
+}
+
+async function superAdminRequest<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const token = getSuperAdminToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${BASE}${path}`, { ...options, headers });
+
+  // Login endpoint: 401 means invalid credentials, not expired session
+  if (res.status === 401 && path === '/api/v1/superadmin/login/') {
+    const data = await res.json().catch(() => ({}));
+    const msg = data.error || data.detail || 'Invalid email or password';
+    throw new Error(msg);
+  }
+
+  if (res.status === 401) {
+    clearSuperAdminTokens();
+    window.location.href = '/admin/login';
+    throw new Error('Session expired');
+  }
+
+  const data = await res.json();
+  if (!res.ok) {
+    const msg =
+      data.error || data.detail || data.message || `Request failed (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as T;
+}
+
+export async function superAdminLogin(email: string, password: string) {
+  const res = await superAdminRequest<SuperAdminLoginResponse>('/api/v1/superadmin/login/', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  setSuperAdminTokens(res.tokens);
+  return res;
+}
+
+export async function getSuperAdminStats() {
+  return superAdminRequest<PlatformStats>('/api/v1/superadmin/stats/');
+}
+
+export async function getSuperAdminTenants() {
+  return superAdminRequest<SuperAdminTenant[]>('/api/v1/superadmin/tenants/');
+}
+
+export async function toggleSuperAdminTenant(tenantId: string, isActive: boolean) {
+  return superAdminRequest<TenantToggleResponse>(
+    `/api/v1/superadmin/tenants/${tenantId}/toggle/`,
+    { method: 'PATCH', body: JSON.stringify({ is_active: isActive }) },
+  );
+}
+
