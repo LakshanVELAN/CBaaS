@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../auth';
 import * as api from '../api';
-import { FlaskConical, User, Trash2, Zap, Copy, Bot, Send } from 'lucide-react';
+import { User, Trash2, Zap, Copy, Bot } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'bot';
