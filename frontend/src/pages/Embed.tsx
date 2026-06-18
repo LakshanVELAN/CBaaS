@@ -55,6 +55,9 @@ export default function Embed() {
 
   const embedCode = `<!-- Chatbot SaaS Widget -->
 <script>
+// ⬇️ Set the user's role from your auth system (optional — defaults to 'guest')
+// window.SaaS_User_Role = 'admin';  // or 'student', 'manager', 'employer', etc.
+
 window.ChatbotConfig = {
   apiKey: '${apiKey || 'YOUR_API_KEY'}',
   baseUrl: '${backendUrl}',
@@ -278,7 +281,7 @@ window.ChatbotConfig = {
                 <li><strong>Save</strong> and reload your website — the chatbot widget will appear!</li>
               </ol>
               <div className="embed-tip">
-                💡 <strong>Tip:</strong> The widget automatically scans the page content and sends it to the training endpoint for smarter responses. Make sure your API key has the correct <code className="code-sm">allowed_origins</code> configured.
+                💡 <strong>Tip:</strong> The widget renders for all visitors and tailors responses based on the user's role. Set <code className="code-sm">window.SaaS_User_Role</code> before <code className="code-sm">ChatbotConfig</code> to dynamically detect logged-in users (e.g. <code className="code-sm">'admin'</code>, <code className="code-sm">'student'</code>). Defaults to <code className="code-sm">'guest'</code> if not set.
               </div>
             </div>
           </div>
