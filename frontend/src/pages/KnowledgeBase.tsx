@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as api from '../api';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { BookOpen, Link2, Upload, Lightbulb, Check, RefreshCw, FileText, UploadCloud, Mail, ExternalLink } from 'lucide-react';
 
 type Tab = 'training' | 'neo4j' | 'upload' | 'guide';
 
@@ -203,11 +204,11 @@ export default function KnowledgeBase() {
       )
     : entries;
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'training', label: 'Page Training', icon: '📚' },
-    { key: 'neo4j', label: 'Neo4j GraphDB', icon: '🔗' },
-    { key: 'upload', label: 'Upload JSON', icon: '📤' },
-    { key: 'guide', label: 'Help & Guide', icon: '💡' },
+  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: 'training', label: 'Page Training', icon: <BookOpen size={16} /> },
+    { key: 'neo4j', label: 'Neo4j GraphDB', icon: <Link2 size={16} /> },
+    { key: 'upload', label: 'Upload JSON', icon: <Upload size={16} /> },
+    { key: 'guide', label: 'Help & Guide', icon: <Lightbulb size={16} /> },
   ];
 
   return (
@@ -262,7 +263,7 @@ export default function KnowledgeBase() {
             {trainResult && (
               <div className="train-result">
                 <span className="train-result-icon">
-                  {trainResult.created ? '✅' : '🔄'}
+                  {trainResult.created ? <Check size={16} color="#10b981" /> : <RefreshCw size={16} color="#f59e0b" />}
                 </span>
                 <span>
                   <strong>{trainResult.title}</strong> —{' '}
@@ -453,7 +454,7 @@ export default function KnowledgeBase() {
           ════════════════════════════════════════ */}
       {activeTab === 'upload' && (
         <div className="card">
-          <h3>📤 Upload JSON Knowledge File</h3>
+          <h3>Upload JSON Knowledge File</h3>
           <p className="card-desc">
             Upload a JSON file containing your front-end's UI structure — roles,
             pages, actions, and navigation. This data will be imported into the
@@ -469,7 +470,7 @@ export default function KnowledgeBase() {
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
               />
-              <div className="upload-icon">📄</div>
+              <div className="upload-icon"><FileText size={36} color="#94a3b8" /></div>
               <p className="upload-text">
                 {uploadFile ? (
                   <><strong>{uploadFile.name}</strong> ({(uploadFile.size / 1024).toFixed(1)} KB)</>
@@ -494,7 +495,7 @@ export default function KnowledgeBase() {
 
             {uploadResult && (
               <div className="upload-result">
-                <div className="upload-result-icon">✅</div>
+                <div className="upload-result-icon"><Check size={24} color="#10b981" /></div>
                 <div className="upload-result-body">
                   <strong>{uploadResult.message}</strong>
                   <div className="upload-stats">
@@ -510,7 +511,7 @@ export default function KnowledgeBase() {
           </div>
 
           <details className="upload-schema">
-            <summary>📖 View expected JSON structure</summary>
+            <summary>View expected JSON structure</summary>
             <pre className="upload-schema-code">{`{
   "roles": [
     {
@@ -550,7 +551,7 @@ export default function KnowledgeBase() {
           ════════════════════════════════════════ */}
       {activeTab === 'guide' && (
         <div className="card">
-          <h3>💡 Help & Knowledge Extraction Guide</h3>
+          <h3>Help & Knowledge Extraction Guide</h3>
 
           {guideLoading ? (
             <p className="text-muted">Loading guide…</p>
@@ -584,8 +585,7 @@ export default function KnowledgeBase() {
                   className="btn btn-sm btn-secondary"
                   onClick={copyPrompt}
                   style={{ flexShrink: 0 }}
-                >
-                  {copied ? '✅ Copied!' : '📋 Copy Prompt'}
+                >                    {copied ? 'Copied!' : 'Copy Prompt'}
                 </button>
               </div>
 
@@ -601,13 +601,13 @@ export default function KnowledgeBase() {
                 </p>
                 <div className="guide-support-actions">
                   <a href="mailto:support@chatbotsaas.com" className="btn btn-primary">
-                    📧 Email Support
+                    Email Support
                   </a>
                   <a href="#" className="btn btn-secondary" onClick={(e) => { e.preventDefault(); setActiveTab('upload'); }}>
-                    📤 Go to JSON Upload
+                    Go to JSON Upload
                   </a>
                   <a href="#" className="btn btn-secondary" onClick={(e) => { e.preventDefault(); setActiveTab('neo4j'); }}>
-                    🔗 Configure Neo4j
+                    Configure Neo4j
                   </a>
                 </div>
               </div>

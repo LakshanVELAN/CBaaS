@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import * as api from '../../api';
+import { ClipboardList, X, BarChart3, MessageSquare, Hash, KeyRound } from 'lucide-react';
 
 function formatDate(iso: string | null) {
   if (!iso) return '—';
@@ -344,7 +345,7 @@ export default function SuperAdminTenants() {
                         onClick={() => setSelectedTenantId(tenant.id)}
                         title="View Details"
                       >
-                        📋
+                        <ClipboardList size={14} />
                       </button>
                       <button
                         className={`btn btn-sm ${tenant.is_active ? 'btn-danger-outline' : 'btn-primary'}`}

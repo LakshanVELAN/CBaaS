@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../auth';
 import * as api from '../api';
+import { FlaskConical, User, Trash2, Zap, Copy, Bot, Send } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'bot';
@@ -116,7 +117,7 @@ export default function Playground() {
     <div className="page playground-page">
       <div className="page-header playground-header">
         <div>
-          <h2>🧪 Chat Playground</h2>
+          <h2>Chat Playground</h2>
           <p>Test your chatbot in real-time. Messages use your knowledge base and Neo4j graph for context-aware responses.</p>
         </div>
         <div className="playground-actions-top">
@@ -166,7 +167,7 @@ export default function Playground() {
                 className={`chat-msg ${msg.role === 'user' ? 'chat-msg-user' : 'chat-msg-bot'}`}
               >
                 <div className="chat-msg-avatar">
-                  {msg.role === 'user' ? '🧑' : '🤖'}
+                  {msg.role === 'user' ? <User size={18} /> : <Bot size={18} />}
                 </div>
                 <div className="chat-msg-content">
                   <div className="chat-msg-header">
@@ -198,7 +199,7 @@ export default function Playground() {
 
             {sending && (
               <div className="chat-msg chat-msg-bot">
-                <div className="chat-msg-avatar">🤖</div>
+                <div className="chat-msg-avatar"><Bot size={18} /></div>
                 <div className="chat-msg-content">
                   <div className="chat-msg-header">
                     <span className="chat-msg-role">Assistant</span>

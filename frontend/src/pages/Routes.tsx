@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as api from '../api';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { Pencil, Trash2 } from 'lucide-react';
 
 export default function RoutesPage() {
   const [routes, setRoutes] = useState<api.RouteEntry[]>([]);
@@ -176,13 +177,13 @@ export default function RoutesPage() {
                     </td>
                     <td className="td-actions">
                       <button className="btn btn-sm" onClick={() => openEdit(r)}>
-                        ✏️
+                        <Pencil size={14} />
                       </button>
                       <button
                         className="btn btn-sm btn-danger-outline"
                         onClick={() => setConfirmDelete(r.id)}
                       >
-                        🗑️
+                        <Trash2 size={14} />
                       </button>
                     </td>
                   </tr>

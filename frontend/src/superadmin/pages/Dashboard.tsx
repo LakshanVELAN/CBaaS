@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as api from '../../api';
 import StatsCard from '../../components/StatsCard';
+import { Building2, TrendingUp, MessageSquare, Hash, KeyRound, Users } from 'lucide-react';
 
 const planColors: Record<string, string> = {
   free: '#10b981',
@@ -79,35 +80,35 @@ export default function SuperAdminDashboard() {
           title="Total Tenants"
           value={stats.total_tenants.toLocaleString()}
           subtitle={`${stats.active_tenants} active · ${stats.suspended_tenants} suspended`}
-          icon="🏢"
+          icon={<Building2 size={20} />}
           color="#6366f1"
         />
         <StatsCard
           title="New Tenants (30d)"
           value={stats.recent_tenants_30d.toLocaleString()}
           subtitle="Registered in last 30 days"
-          icon="📈"
+          icon={<TrendingUp size={20} />}
           color="#10b981"
         />
         <StatsCard
           title="Total Messages"
           value={stats.total_messages.toLocaleString()}
           subtitle="Across all tenants"
-          icon="💬"
+          icon={<MessageSquare size={20} />}
           color="#06b6d4"
         />
         <StatsCard
           title="Tokens Used"
           value={stats.total_tokens.toLocaleString()}
           subtitle={`≈ $${stats.total_cost.toFixed(4)} total cost`}
-          icon="🔤"
+          icon={<Hash size={20} />}
           color="#f59e0b"
         />
         <StatsCard
           title="API Keys Issued"
           value={stats.total_api_keys.toLocaleString()}
           subtitle="Total across all tenants"
-          icon="🔑"
+          icon={<KeyRound size={20} />}
           color="#8b5cf6"
         />
       </div>
@@ -220,8 +221,8 @@ export default function SuperAdminDashboard() {
       <div style={{ marginTop: '2rem' }}>
         <h3 style={{ marginBottom: '0.75rem' }}>Quick Actions</h3>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <a href="/superadmin/tenants" className="btn btn-primary">
-            🏢 Manage Tenants
+          <a href="/superadmin/tenants" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Building2 size={16} /> Manage Tenants
           </a>
         </div>
       </div>

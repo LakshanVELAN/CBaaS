@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useAuth } from '../auth';
 import * as api from '../api';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 export default function Settings() {
   const { tenant, refresh } = useAuth();
@@ -111,7 +112,7 @@ export default function Settings() {
 
         {message && (
           <div className={`form-message ${message.type}`}>
-            {message.type === 'success' ? '✅ ' : '❌ '}
+            {message.type === 'success' ? <CheckCircle size={16} color="#10b981" /> : <XCircle size={16} color="#ef4444" />}
             {message.text}
           </div>
         )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as api from '../api';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { Pencil, Trash2 } from 'lucide-react';
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<api.RoleEntry[]>([]);
@@ -153,13 +154,13 @@ export default function RolesPage() {
                     </td>
                     <td className="td-actions">
                       <button className="btn btn-sm" onClick={() => openEdit(r)}>
-                        ✏️
+                        <Pencil size={14} />
                       </button>
                       <button
                         className="btn btn-sm btn-danger-outline"
                         onClick={() => setConfirmDelete(r.id)}
                       >
-                        🗑️
+                        <Trash2 size={14} />
                       </button>
                     </td>
                   </tr>

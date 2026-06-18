@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as api from '../api';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { KeyRound, Copy, Check } from 'lucide-react';
 
 export default function ApiKeys() {
   const [keys, setKeys] = useState<api.ApiKey[]>([]);
@@ -9,6 +10,7 @@ export default function ApiKeys() {
   const [creating, setCreating] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export default function ApiKeys() {
       {revealedKey && (
         <div className="card key-reveal-card">
           <div className="key-reveal-content">
-            <span className="key-reveal-icon">🔑</span>
+            <span className="key-reveal-icon"><KeyRound size={24} color="#6366f1" /></span>
             <div>
               <strong>Key Generated!</strong>
               <p>Save this key — it will never be shown again.</p>
@@ -84,7 +86,7 @@ export default function ApiKeys() {
                   className="btn btn-sm"
                   onClick={() => navigator.clipboard.writeText(revealedKey)}
                 >
-                  📋 Copy
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
                 </button>
               </div>
             </div>

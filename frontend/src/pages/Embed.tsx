@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../auth';
 import * as api from '../api';
+import { Plug, Eye, EyeOff, MessageSquare, Copy, Check, KeyRound, AlertTriangle } from 'lucide-react';
 
 type WidgetPosition = 'bottom-right' | 'bottom-left';
 
@@ -80,7 +81,7 @@ window.ChatbotConfig = {
   return (
     <div className="page embed-page">
       <div className="page-header">
-        <h2>🔌 Embed Widget</h2>
+        <h2>Embed Widget</h2>
         <p>Add the chatbot widget to your website with a simple script tag. Customize the look and feel below.</p>
       </div>
 
@@ -89,7 +90,7 @@ window.ChatbotConfig = {
         <div className="embed-config">
           {/* API Key */}
           <div className="card">
-            <h3>1️⃣ API Key</h3>
+            <h3>API Key</h3>
             <p className="card-desc">Select an active API key for the widget to authenticate with your backend.</p>
             {loadingKeys ? (
               <div className="spinner-sm" />
@@ -118,7 +119,7 @@ window.ChatbotConfig = {
 
           {/* Appearance */}
           <div className="card">
-            <h3>2️⃣ Appearance</h3>
+            <h3>Appearance</h3>
 
             <div className="embed-field">
               <label>Bot Name</label>
@@ -191,7 +192,7 @@ window.ChatbotConfig = {
           {/* Preview Toggle */}
           <div className="card">
             <div className="embed-preview-toggle">
-              <h3>👁️ Live Preview</h3>
+              <h3><Eye size={18} /> Live Preview</h3>
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={() => setPreviewVisible(!previewVisible)}
@@ -203,7 +204,7 @@ window.ChatbotConfig = {
               <div className="embed-preview-container">
                 <div className="widget-preview">
                   <div className="widget-preview-header" style={{ backgroundColor: primaryColor }}>
-                    <span className="widget-preview-icon">💬</span>
+                    <span className="widget-preview-icon"><MessageSquare size={18} color="#fff" /></span>
                     <span className="widget-preview-name">{botName || 'Assistant'}</span>
                     <span className="widget-preview-status">● Online</span>
                   </div>
@@ -255,13 +256,13 @@ window.ChatbotConfig = {
         <div className="embed-output">
           <div className="card embed-code-card">
             <div className="embed-code-header">
-              <h3>📋 Embed Code</h3>
+              <h3>Embed Code</h3>
               <div className="embed-code-actions">
                 <button
                   className={`btn ${copied ? 'btn-secondary' : 'btn-primary'} btn-sm`}
                   onClick={handleCopy}
                 >
-                  {copied ? '✅ Copied!' : '📋 Copy Code'}
+                  {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Code</>}
                 </button>
               </div>
             </div>
@@ -272,7 +273,7 @@ window.ChatbotConfig = {
               <code>{embedCode}</code>
             </pre>
             <div className="embed-instructions">
-              <h4>📖 Installation Guide</h4>
+              <h4>Installation Guide</h4>
               <ol className="embed-steps">
                 <li><strong>Copy</strong> the embed code above</li>
                 <li><strong>Paste</strong> it just before the <code className="code-sm">&lt;/body&gt;</code> tag on your website</li>
@@ -288,7 +289,7 @@ window.ChatbotConfig = {
 
           {/* API Key List */}
           <div className="card">
-            <h3>🔑 Your API Keys</h3>
+            <h3>Your API Keys</h3>
             <p className="card-desc">Use one of these keys in the embed code above.</p>
             <ApiKeyListWidget onSelect={setApiKey} />
           </div>

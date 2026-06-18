@@ -1,35 +1,36 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { useEffect } from 'react';
+import { MessageSquare, Brain, KeyRound, BookOpen, Map, BarChart3, CreditCard, Rocket, Lock, Zap, Clock, CheckCircle, ArrowRight } from 'lucide-react';
 
 const FEATURES = [
   {
-    icon: '🧠',
+    icon: <Brain size={28} color="#6366f1" />,
     title: 'AI-Powered Chat',
     desc: 'Deploy intelligent chatbots powered by LLMs that understand your business and answer customer questions in real time.',
   },
   {
-    icon: '🔑',
+    icon: <KeyRound size={28} color="#6366f1" />,
     title: 'API Key Auth',
     desc: 'Secure per-tenant API key authentication with fine-grained access control and usage tracking.',
   },
   {
-    icon: '📚',
+    icon: <BookOpen size={28} color="#6366f1" />,
     title: 'Knowledge Base',
     desc: 'Train your bot on your content — web pages, documentation, and structured data — so it always knows the right answer.',
   },
   {
-    icon: '🗺️',
+    icon: <Map size={28} color="#6366f1" />,
     title: 'Smart Routing',
     desc: 'Define custom routes with role-based access to guide conversations and expose exactly the right endpoints.',
   },
   {
-    icon: '📊',
+    icon: <BarChart3 size={28} color="#6366f1" />,
     title: 'Analytics & Insights',
     desc: 'Track message volume, token usage, costs, and daily trends with beautiful dashboards and exportable data.',
   },
   {
-    icon: '💳',
+    icon: <CreditCard size={28} color="#6366f1" />,
     title: 'Usage-Based Billing',
     desc: 'Transparent per-message pricing with free tier, monthly quotas, automated Stripe billing, and seamless upgrades.',
   },
@@ -111,7 +112,7 @@ export default function Landing() {
       <nav className="landing-nav">
         <div className="landing-nav-inner">
           <div className="landing-logo">
-            <span className="landing-logo-icon">💬</span>
+            <span className="landing-logo-icon"><MessageSquare size={20} /></span>
             <span className="landing-logo-text">Chatbot SaaS</span>
           </div>
           <div className="landing-nav-links">
@@ -137,7 +138,7 @@ export default function Landing() {
           <div className="hero-blob hero-blob-2" />
         </div>
         <div className="landing-hero-content">
-          <div className="hero-badge">🚀 Launch your AI chatbot in minutes</div>
+          <div className="hero-badge"><Rocket size={14} /> Launch your AI chatbot in minutes</div>
           <h1 className="hero-title">
             Smart Chatbots{' '}
             <span className="hero-gradient">for Your Business</span>
@@ -162,9 +163,9 @@ export default function Landing() {
             </button>
           </div>
           <p className="hero-trust">
-            <span>🔒 No credit card required</span>
-            <span>⚡ 1,000 free messages/month</span>
-            <span>🕐 60-second setup</span>
+            <span><Lock size={14} /> No credit card required</span>
+            <span><Zap size={14} /> 1,000 free messages/month</span>
+            <span><Clock size={14} /> 60-second setup</span>
           </p>
         </div>
       </section>
@@ -236,7 +237,7 @@ export default function Landing() {
                 <ul className="pricing-features">
                   {p.features.map((f) => (
                     <li key={f} className="pricing-feature">
-                      <span className="feature-check">✓</span>
+                      <span className="feature-check"><CheckCircle size={14} color="#10b981" /></span>
                       {f}
                     </li>
                   ))}
@@ -275,7 +276,7 @@ export default function Landing() {
         <div className="landing-footer-inner">
           <div className="footer-brand">
             <div className="landing-logo">
-              <span className="landing-logo-icon">💬</span>
+              <span className="landing-logo-icon"><MessageSquare size={20} /></span>
               <span className="landing-logo-text">Chatbot SaaS</span>
             </div>
             <p className="footer-text">

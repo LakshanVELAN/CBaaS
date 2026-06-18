@@ -5,6 +5,10 @@ import StatsCard from '../components/StatsCard';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import {
+  ClipboardList, BarChart3, MessageSquare, Hash, BookOpen, Map,
+  Users, Trophy, Hexagon, File, KeyRound, Settings, TrendingUp,
+} from 'lucide-react';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -71,56 +75,56 @@ export default function Dashboard() {
           title="Plan"
           value={tenant?.plan || 'Free'}
           subtitle={`${(tenant?.monthly_message_quota || 0).toLocaleString()} msgs/mo`}
-          icon="📋"
+          icon={<ClipboardList size={20} />}
           color="#6366f1"
         />
         <StatsCard
           title="This Month"
           value={(overview?.current_month?.total_messages ?? 0).toLocaleString()}
           subtitle={`${quotaPercent}% of quota used`}
-          icon="📊"
+          icon={<BarChart3 size={20} />}
           color={quotaColor}
         />
         <StatsCard
           title="Messages (30d)"
           value={(overview?.range?.total_messages ?? 0).toLocaleString()}
           subtitle={`${overview?.range?.successful ?? 0} successful`}
-          icon="💬"
+          icon={<MessageSquare size={20} />}
           color="#06b6d4"
         />
         <StatsCard
           title="Tokens (30d)"
           value={(overview?.range?.total_tokens ?? 0).toLocaleString()}
           subtitle={`≈ $${(overview?.range?.total_cost_usd ?? 0).toFixed(4)}`}
-          icon="🔤"
+          icon={<Hash size={20} />}
           color="#10b981"
         />
         <StatsCard
           title="Knowledge Base"
           value={kbCount}
           subtitle="Trained pages"
-          icon="📚"
+          icon={<BookOpen size={20} />}
           color="#f59e0b"
         />
         <StatsCard
           title="Routes"
           value={routeCount}
           subtitle="Registered paths"
-          icon="🗺️"
+          icon={<Map size={20} />}
           color="#8b5cf6"
         />
         <StatsCard
           title="Roles"
           value={roleCount}
           subtitle="User roles configured"
-          icon="👤"
+          icon={<Users size={20} />}
           color="#ec4899"
         />
         <StatsCard
           title="Lifetime"
           value={(overview?.lifetime?.total_messages ?? 0).toLocaleString()}
           subtitle={`${(overview?.lifetime?.total_tokens ?? 0).toLocaleString()} tokens total`}
-          icon="🏆"
+          icon={<Trophy size={20} />}
           color="#6366f1"
         />
         {neo4jConnected && (
@@ -129,14 +133,14 @@ export default function Dashboard() {
               title="Graph Roles"
               value={graphStats!.roles}
               subtitle="Neo4j"
-              icon="🔷"
+              icon={<Hexagon size={20} />}
               color="#8b5cf6"
             />
             <StatsCard
               title="Graph Pages"
               value={graphStats!.pages}
               subtitle="Neo4j"
-              icon="📄"
+              icon={<File size={20} />}
               color="#ec4899"
             />
           </>
@@ -148,7 +152,7 @@ export default function Dashboard() {
         <div className="chart-card">
           {!hasUsage ? (
             <div className="chart-empty">
-              <span className="chart-empty-icon">📊</span>
+              <BarChart3 size={48} color="#d1d5db" />
               <p>No usage data yet. Start sending messages to see your daily usage chart here.</p>
             </div>
           ) : (
@@ -185,19 +189,19 @@ export default function Dashboard() {
         <h2 className="section-title">Quick Actions</h2>
         <div className="actions-grid">
           <a href="/api-keys" className="action-card">
-            <span className="action-icon">🔑</span>
+            <span className="action-icon"><KeyRound size={22} /></span>
             <span className="action-label">Manage API Keys</span>
           </a>
           <a href="/knowledge-base" className="action-card">
-            <span className="action-icon">📚</span>
+            <span className="action-icon"><BookOpen size={22} /></span>
             <span className="action-label">Train a Page</span>
           </a>
           <a href="/routes" className="action-card">
-            <span className="action-icon">🗺️</span>
+            <span className="action-icon"><Map size={22} /></span>
             <span className="action-label">Manage Routes</span>
           </a>
           <a href="/settings" className="action-card">
-            <span className="action-icon">⚙️</span>
+            <span className="action-icon"><Settings size={22} /></span>
             <span className="action-label">Settings</span>
           </a>
         </div>

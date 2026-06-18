@@ -1,10 +1,11 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useSuperAdminAuth } from './auth';
 import { useState } from 'react';
+import { LayoutDashboard, Building2, Shield, ArrowLeft, RefreshCw } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { to: '/superadmin/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/superadmin/tenants', label: 'Tenants', icon: '🏢' },
+  { to: '/superadmin/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+  { to: '/superadmin/tenants', label: 'Tenants', icon: <Building2 size={18} /> },
 ];
 
 export default function SuperAdminLayout() {
@@ -22,7 +23,7 @@ export default function SuperAdminLayout() {
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <span className="logo-icon">⚙️</span>
+            <span className="logo-icon"><Shield size={22} /></span>
             <span className="logo-text">Admin Panel</span>
           </div>
           <button
@@ -66,11 +67,11 @@ export default function SuperAdminLayout() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
-            <a href="/" className="btn btn-sm btn-secondary" style={{ textAlign: 'center', textDecoration: 'none' }}>
-              ← Back to App
+            <a href="/" className="btn btn-sm btn-secondary" style={{ textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <ArrowLeft size={14} /> Back to App
             </a>
-            <a href="/superadmin/login" className="btn btn-sm btn-secondary" style={{ textAlign: 'center', textDecoration: 'none' }}>
-              Switch Account
+            <a href="/superadmin/login" className="btn btn-sm btn-secondary" style={{ textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <RefreshCw size={14} /> Switch Account
             </a>
             <button className="logout-btn" onClick={handleLogout}>
               Sign out

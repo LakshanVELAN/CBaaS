@@ -1,18 +1,22 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { useState } from 'react';
+import {
+  LayoutDashboard, KeyRound, BookOpen, Map, FlaskConical,
+  Plug, FileText, Users, CreditCard, Settings, MessageSquare,
+} from 'lucide-react';
 
 const NAV_ITEMS = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/api-keys', label: 'API Keys', icon: '🔑' },
-  { to: '/knowledge-base', label: 'Knowledge Base', icon: '📚' },
-  { to: '/routes', label: 'Routes', icon: '🗺️' },
-  { to: '/playground', label: 'Playground', icon: '🧪' },
-  { to: '/embed', label: 'Embed', icon: '🔌' },
-  { to: '/client-guide', label: 'Client Guide', icon: '📖' },
-  { to: '/roles', label: 'Roles', icon: '👤' },
-  { to: '/billing', label: 'Billing', icon: '💳' },
-  { to: '/settings', label: 'Settings', icon: '⚙️' },
+  { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+  { to: '/api-keys', label: 'API Keys', icon: <KeyRound size={18} /> },
+  { to: '/knowledge-base', label: 'Knowledge Base', icon: <BookOpen size={18} /> },
+  { to: '/routes', label: 'Routes', icon: <Map size={18} /> },
+  { to: '/playground', label: 'Playground', icon: <FlaskConical size={18} /> },
+  { to: '/embed', label: 'Embed', icon: <Plug size={18} /> },
+  { to: '/client-guide', label: 'Client Guide', icon: <FileText size={18} /> },
+  { to: '/roles', label: 'Roles', icon: <Users size={18} /> },
+  { to: '/billing', label: 'Billing', icon: <CreditCard size={18} /> },
+  { to: '/settings', label: 'Settings', icon: <Settings size={18} /> },
 ];
 
 export default function Layout() {
@@ -30,7 +34,7 @@ export default function Layout() {
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <span className="logo-icon">💬</span>
+            <span className="logo-icon"><MessageSquare size={22} /></span>
             <span className="logo-text">Chatbot SaaS</span>
           </div>
           <button
