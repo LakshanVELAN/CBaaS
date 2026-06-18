@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/routes', label: 'Routes', icon: '🗺️' },
   { to: '/playground', label: 'Playground', icon: '🧪' },
   { to: '/embed', label: 'Embed', icon: '🔌' },
+  { to: '/client-guide', label: 'Client Guide', icon: '📖' },
   { to: '/roles', label: 'Roles', icon: '👤' },
   { to: '/billing', label: 'Billing', icon: '💳' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },

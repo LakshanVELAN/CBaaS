@@ -15,6 +15,7 @@ import Billing from './pages/Billing';
 import Settings from './pages/Settings';
 import Playground from './pages/Playground';
 import Embed from './pages/Embed';
+import ClientGuide from './pages/ClientGuide';
 import './styles.css';
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/playground" element={<Playground />} />
             <Route path="/embed" element={<Embed />} />
+            <Route path="/client-guide" element={<ClientGuide />} />
           </Route>
         </Routes>
       </AuthProvider>
