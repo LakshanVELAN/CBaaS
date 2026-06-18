@@ -2,6 +2,38 @@ import { useState, useEffect } from 'react';
 import * as api from '../../api';
 import StatsCard from '../../components/StatsCard';
 
+const planColors: Record<string, string> = {
+  free: '#10b981',
+  starter: '#f59e0b',
+  pro: '#6366f1',
+  enterprise: '#ec4899',
+};
+
+const planBadgeStyle = (plan: string) => ({
+  backgroundColor: (planColors[plan] || '#6366f1') + '20',
+  color: planColors[plan] || '#6366f1',
+  padding: '2px 8px',
+  borderRadius: '4px',
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  textTransform: 'capitalize' as const,
+});
+
+function StatusBadge({ active }: { active: boolean }) {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        width: 8,
+        height: 8,
+        borderRadius: '50%',
+        backgroundColor: active ? '#10b981' : '#ef4444',
+        marginRight: 4,
+      }}
+    />
+  );
+}
+
 export default function SuperAdminDashboard() {
   const [stats, setStats] = useState<api.PlatformStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,13 +66,6 @@ export default function SuperAdminDashboard() {
 
   if (!stats) return null;
 
-  const planColors: Record<string, string> = {
-    free: '#10b981',
-    starter: '#f59e0b',
-    pro: '#6366f1',
-    enterprise: '#ec4899',
-  };
-
   return (
     <div className="page">
       <div className="page-header">
@@ -48,6 +73,7 @@ export default function SuperAdminDashboard() {
         <p className="page-subtitle">Monitor all tenants and platform usage</p>
       </div>
 
+      {/* Stats Cards */}
       <div className="dashboard-grid">
         <StatsCard
           title="Total Tenants"
@@ -76,6 +102,13 @@ export default function SuperAdminDashboard() {
           subtitle={`≈ $${stats.total_cost.toFixed(4)} total cost`}
           icon="🔤"
           color="#f59e0b"
+        />
+        <StatsCard
+          title="API Keys Issued"
+          value={stats.total_api_keys.toLocaleString()}
+          subtitle="Total across all tenants"
+          icon="🔑"
+          color="#8b5cf6"
         />
       </div>
 
@@ -110,6 +143,78 @@ export default function SuperAdminDashboard() {
           ))}
         </div>
       </div>
+
+      {/* Recent Registrations */}
+      {stats.recent_tenants.length > 0 && (
+        <div className="card" style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ marginBottom: '0.75rem' }}>Recent Registrations</h3>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Plan</th>
+                  <th>Status</th>
+                  <th>Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recent_tenants.map((t) => (
+                  <tr key={t.id}>
+                    <td style={{ fontWeight: 500 }}>{t.name}</td>
+                    <td style={{ color: '#64748b' }}>{t.email}</td>
+                    <td><span style={planBadgeStyle(t.plan)}>{t.plan}</span></td>
+                    <td>
+                      <StatusBadge active={t.is_active} />
+                      {t.is_active ? 'Active' : 'Suspended'}
+                    </td>
+                    <td style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                      {new Date(t.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric',
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Top Tenants by Usage */}
+      {stats.top_tenants.length > 0 && (
+        <div className="card" style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ marginBottom: '0.75rem' }}>Top Tenants by Message Count</h3>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Plan</th>
+                  <th>Messages</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.top_tenants.map((t, i) => (
+                  <tr key={t.id}>
+                    <td style={{ color: '#64748b', width: 30 }}>{i + 1}</td>
+                    <td style={{ fontWeight: 500 }}>{t.name}</td>
+                    <td><span style={planBadgeStyle(t.plan)}>{t.plan}</span></td>
+                    <td style={{ fontWeight: 600 }}>{t.total_messages.toLocaleString()}</td>
+                    <td>
+                      <StatusBadge active={t.is_active} />
+                      {t.is_active ? 'Active' : 'Suspended'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Quick actions */}
       <div style={{ marginTop: '2rem' }}>

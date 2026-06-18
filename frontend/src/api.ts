@@ -550,15 +550,76 @@ export interface PlatformStats {
   total_messages: number;
   total_tokens: number;
   total_cost: number;
+  total_api_keys: number;
+  top_tenants: Array<{
+    id: string;
+    name: string;
+    email: string;
+    plan: string;
+    total_messages: number;
+    is_active: boolean;
+  }>;
+  recent_tenants: Array<{
+    id: string;
+    name: string;
+    email: string;
+    plan: string;
+    is_active: boolean;
+    created_at: string;
+  }>;
 }
 
 export interface SuperAdminTenant {
   id: string;
   name: string;
+  email: string;
   plan: string;
+  monthly_quota: number;
+  current_month_usage: number;
+  usage_percent: number;
   is_active: boolean;
   total_messages: number;
+  api_key_count: number;
+  last_active: string | null;
   created_at: string;
+}
+
+export interface TenantDetail {
+  id: string;
+  name: string;
+  email: string;
+  plan: string;
+  monthly_quota: number;
+  current_month_usage: number;
+  current_month_tokens: number;
+  usage_percent: number;
+  is_active: boolean;
+  total_messages: number;
+  total_tokens: number;
+  total_cost: number;
+  last_active: string | null;
+  created_at: string;
+  api_keys: Array<{
+    id: string;
+    prefix: string;
+    name: string;
+    is_active: boolean;
+    last_used_at: string | null;
+    created_at: string;
+  }>;
+  daily_usage: Array<{
+    date: string;
+    messages: number;
+    tokens: number;
+    cost: number;
+  }>;
+  monthly_usage: Array<{
+    year: number;
+    month: number;
+    total_messages: number;
+    total_tokens: number;
+    total_cost_usd: string;
+  }>;
 }
 
 export interface TenantToggleResponse {
@@ -641,6 +702,10 @@ export async function getSuperAdminStats() {
 
 export async function getSuperAdminTenants() {
   return superAdminRequest<SuperAdminTenant[]>('/api/v1/superadmin/tenants/');
+}
+
+export async function getSuperAdminTenantDetail(tenantId: string) {
+  return superAdminRequest<TenantDetail>(`/api/v1/superadmin/tenants/${tenantId}/`);
 }
 
 export async function toggleSuperAdminTenant(tenantId: string, isActive: boolean) {
