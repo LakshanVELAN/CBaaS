@@ -613,7 +613,7 @@ async function superAdminRequest<T>(
 
   if (res.status === 401) {
     clearSuperAdminTokens();
-    window.location.href = '/admin/login';
+    window.location.href = '/superadmin/login';
     throw new Error('Session expired');
   }
 

@@ -3,8 +3,8 @@ import { useSuperAdminAuth } from './auth';
 import { useState } from 'react';
 
 const NAV_ITEMS = [
-  { to: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/admin/tenants', label: 'Tenants', icon: '🏢' },
+  { to: '/superadmin/dashboard', label: 'Dashboard', icon: '📊' },
+  { to: '/superadmin/tenants', label: 'Tenants', icon: '🏢' },
 ];
 
 export default function SuperAdminLayout() {
@@ -14,7 +14,7 @@ export default function SuperAdminLayout() {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/superadmin/login');
   };
 
   return (
@@ -68,6 +68,9 @@ export default function SuperAdminLayout() {
           <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
             <a href="/" className="btn btn-sm btn-secondary" style={{ textAlign: 'center', textDecoration: 'none' }}>
               ← Back to App
+            </a>
+            <a href="/superadmin/login" className="btn btn-sm btn-secondary" style={{ textAlign: 'center', textDecoration: 'none' }}>
+              Switch Account
             </a>
             <button className="logout-btn" onClick={handleLogout}>
               Sign out

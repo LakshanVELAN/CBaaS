@@ -115,7 +115,7 @@ export default function SuperAdminDashboard() {
       <div style={{ marginTop: '2rem' }}>
         <h3 style={{ marginBottom: '0.75rem' }}>Quick Actions</h3>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <a href="/admin/tenants" className="btn btn-primary">
+          <a href="/superadmin/tenants" className="btn btn-primary">
             🏢 Manage Tenants
           </a>
         </div>

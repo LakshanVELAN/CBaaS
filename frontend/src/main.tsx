@@ -54,7 +54,7 @@ function App() {
               <Route path="/client-guide" element={<ClientGuide />} />
             </Route>
             {/* Super admin routes */}
-            <Route path="/admin/login" element={<SuperAdminLogin />} />
+            <Route path="/superadmin/login" element={<SuperAdminLogin />} />
             <Route
               element={
                 <SuperAdminProtectedRoute>
@@ -62,8 +62,8 @@ function App() {
                 </SuperAdminProtectedRoute>
               }
             >
-              <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
-              <Route path="/admin/tenants" element={<SuperAdminTenants />} />
+              <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+              <Route path="/superadmin/tenants" element={<SuperAdminTenants />} />
             </Route>
           </Routes>
         </SuperAdminAuthProvider>

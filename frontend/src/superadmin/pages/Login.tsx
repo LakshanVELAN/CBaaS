@@ -12,7 +12,7 @@ export default function SuperAdminLogin() {
   const [localError, setLocalError] = useState<string | null>(null);
 
   if (isSuperAdminAuthenticated()) {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/superadmin/dashboard" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,7 +27,7 @@ export default function SuperAdminLogin() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate('/admin/dashboard', { replace: true });
+      navigate('/superadmin/dashboard', { replace: true });
     } catch (err: any) {
       setLocalError(err.message);
     } finally {
