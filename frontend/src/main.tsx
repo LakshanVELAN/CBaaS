@@ -9,6 +9,7 @@ import Layout from './components/Layout';
 import SuperAdminLayout from './superadmin/Layout';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
+import { Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import ApiKeys from './pages/ApiKeys';
 import KnowledgeBase from './pages/KnowledgeBase';
@@ -33,6 +34,7 @@ function App() {
         <SuperAdminAuthProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/register" element={<Navigate to="/login?register=1" replace />} />
             <Route path="/login" element={<Login />} />
             {/* Client routes */}
             <Route
