@@ -44,7 +44,3 @@ docker-data/
 
 # Widget
 widget/dist/
-
-# Migrations
-backend/**/migrations/*.py
-!backend/**/migrations/__init__.py
