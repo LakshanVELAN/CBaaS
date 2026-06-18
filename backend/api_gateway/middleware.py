@@ -58,7 +58,7 @@ class ApiKeyAuthMiddleware(MiddlewareMixin):
         path = request.path.rstrip('/')
         if any(path == p.rstrip('/') or path.startswith(p) for p in self.EXEMPT_PATHS):
             return None
-        if request.path.startswith('/static/') or request.path.startswith('/admin/') or request.path == '/favicon.ico':
+        if request.path.startswith('/static/') or request.path.startswith('/admin/') or request.path.startswith('/superadmin/') or request.path == '/favicon.ico':
             return None
 
         auth_header = request.headers.get('Authorization', '')
