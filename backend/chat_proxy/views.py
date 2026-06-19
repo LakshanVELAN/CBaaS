@@ -250,96 +250,13 @@ def train_page(request):
 @api_view(['POST'])
 def train_page_from_widget(request):
     """
-    Accept a DOM scan payload from the widget for page training.
-    Stores the structured knowledge into the Neo4j graph database
-    and the knowledge base for chat context.
+    [Temporarily disabled] Widget auto-training has been stopped.
+    Clients should use Neo4j connection + JSON upload or manual page training instead.
     """
-    tenant = request.tenant
-
-    route = request.data.get('route', '')
-    role = request.data.get('role', 'guest')
-    page_knowledge = request.data.get('page_knowledge', {})
-
-    if not route or not page_knowledge:
-        return Response(
-            {'error': 'route and page_knowledge are required'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    # Store page knowledge as a structured JSON entry in the knowledge base
-    url = page_knowledge.get('url', '') or page_knowledge.get('route', route)
-
-    summary = {
-        'page_title': page_knowledge.get('page_title', ''),
-        'route': route,
-        'role': role,
-        'breadcrumbs': page_knowledge.get('breadcrumbs', []),
-        'sections': page_knowledge.get('sections', []),
-        'actions': page_knowledge.get('actions', []),
-        'buttons': page_knowledge.get('buttons', []),
-        'forms': page_knowledge.get('forms', []),
-        'workflow_steps': page_knowledge.get('workflow_steps', []),
-        'instructional_text': page_knowledge.get('instructional_text', []),
-        'tables': page_knowledge.get('tables', []),
-    }
-
-    # Store in PostgreSQL knowledge base for context
-    entry, created = KnowledgeBaseEntry.objects.update_or_create(
-        tenant=tenant,
-        url=f"widget://{route}",
-        defaults={
-            'title': summary.get('page_title', route),
-            'content': json.dumps(summary, indent=2),
-            'extracted_links': [
-                {'url': route, 'title': summary.get('page_title', route)}
-            ],
-            'is_active': True,
-        },
+    return Response(
+        {'error': 'Widget auto-training is temporarily disabled. Use Neo4j connection or manual page training instead.'},
+        status=status.HTTP_503_SERVICE_UNAVAILABLE,
     )
-
-    # Also try to store in Neo4j if available (best-effort)
-    try:
-        neo4j_driver = get_tenant_driver(tenant)
-        if neo4j_driver:
-            db_name = ensure_tenant_database(tenant)
-            # Convert widget knowledge to Neo4j-compatible format
-            neo4j_data = {
-                'roles': [{
-                    'name': role,
-                    'display_name': role.title(),
-                    'description': f'Auto-trained from widget scan of {route}',
-                    'pages': [{
-                        'path': route,
-                        'title': summary.get('page_title', route),
-                        'description': f'Page knowledge for role {role}',
-                        'visible_content': '\n'.join(summary.get('instructional_text', [])),
-                        'actions': [
-                            {
-                                'id': f"action_{role}_{btn.lower().replace(' ', '_')}",
-                                'label': btn,
-                                'action_description': f'Button on {route}',
-                            }
-                            for btn in summary.get('buttons', [])[:10]
-                        ],
-                        'linked_pages': [a.get('url', a.get('label', ''))
-                                         for a in summary.get('actions', [])[:5]
-                                         if a.get('url')],
-                    }],
-                    'menu_items': [],
-                }],
-                'pages': [],
-            }
-            upload_knowledge_to_graph(neo4j_driver, tenant, neo4j_data, db_name)
-    except Exception as e:
-        logger.warning(f"Neo4j upload from widget training failed (non-critical): {e}")
-
-    return Response({
-        'id': str(entry.id),
-        'route': route,
-        'role': role,
-        'created': created,
-        'message': 'Widget page trained successfully',
-    })
 
 
 @api_view(['GET'])
@@ -596,22 +513,7 @@ def extraction_guide(request):
         ),
         'methods': [
             {
-                'method': '1. Automatic Widget Extraction',
-                'description': (
-                    'Embed the chatbot widget script on your website. '
-                    'The widget automatically scans the DOM on each page load '
-                    'and sends structured knowledge (headings, buttons, forms, '
-                    'navigation, breadcrumbs) to the training endpoint. '
-                    'This is the easiest method and works out of the box.'
-                ),
-                'steps': [
-                    'Add the widget script tag to your website\'s <head>',
-                    'Configure it with your tenant API key',
-                    'The widget will auto-train as users navigate your site',
-                ],
-            },
-            {
-                'method': '2. Upload JSON Knowledge File',
+                'method': '1. Upload JSON Knowledge File',
                 'description': (
                     'Export your front-end UI structure as a JSON file and '
                     'upload it directly. This works well for static sites, '
@@ -625,7 +527,7 @@ def extraction_guide(request):
                 ],
             },
             {
-                'method': '3. Manual Page Training',
+                'method': '2. Manual Page Training',
                 'description': (
                     'Enter a URL in the "Train a Page" section above and '
                     'the system will scrape the page content, extract links, '
