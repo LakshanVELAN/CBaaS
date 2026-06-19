@@ -1,6 +1,5 @@
 import { ChatbotConfig, loadConfig } from './config';
 import { ChatWidget } from './ui';
-import { initPageTraining } from './training';
 
 function init() {
   const config = loadConfig();
@@ -11,15 +10,6 @@ function init() {
 
   const widget = new ChatWidget(config);
   widget.mount();
-
-  // Initialize automatic page training (DOM scanning + backend sync)
-  if (config.enablePageTraining !== false) {
-    initPageTraining({
-      role: config.role,
-      apiKey: config.apiKey,
-      baseUrl: config.baseUrl,
-    });
-  }
 
   // Listen for navigation events from the widget
   window.addEventListener('dlc:navigate', ((e: CustomEvent) => {

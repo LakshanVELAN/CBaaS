@@ -5,7 +5,6 @@ export interface ChatbotConfig {
   primaryColor: string;
   position: 'bottom-right' | 'bottom-left';
   role: string;
-  enablePageTraining?: boolean;
   welcomeMessage?: string;
   suggestionChips?: string[];
 }
@@ -15,7 +14,6 @@ const DEFAULTS: Omit<ChatbotConfig, 'apiKey' | 'baseUrl'> = {
   primaryColor: '#1a56db',
   position: 'bottom-right',
   role: 'guest',
-  enablePageTraining: false,
   suggestionChips: ['What can I do here?'],
 };
 
