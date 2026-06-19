@@ -1,7 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth';
-import { MessageSquare, KeyRound, Copy, Check, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { MessageSquare, KeyRound, Copy, Check, ArrowRight, ArrowLeft, Eye, EyeOff, Sparkles } from 'lucide-react';
 
 export default function Login() {
   const { login, register } = useAuth();
@@ -52,12 +52,18 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
+        {/* Back to Homepage link */}
+        <a href="/" className="login-back-link">
+          <ArrowLeft size={14} />
+          Return to Homepage
+        </a>
+
         {/* Header */}
         <div className="login-header">
           <div className="login-logo">
-            <MessageSquare size={28} color="#fff" />
+            <MessageSquare size={24} color="#fff" />
           </div>
-          <h1 className="login-title">Chatbot SaaS</h1>
+          <h1>Chatbot SaaS</h1>
           <p className="login-subtitle">
             {mode === 'login'
               ? 'Sign in to your dashboard'
@@ -77,7 +83,7 @@ export default function Login() {
             className={`tab ${mode === 'register' ? 'active' : ''}`}
             onClick={() => { setMode('register'); setNewKey(null); setError(''); }}
           >
-            Register
+            Create Account
           </button>
         </div>
 
@@ -85,22 +91,22 @@ export default function Login() {
         {newKey ? (
           <div className="key-reveal">
             <div className="key-reveal-icon">
-              <KeyRound size={32} color="#6366f1" />
+              <Sparkles size={28} color="#6366f1" />
             </div>
-            <h3 style={{ margin: '12px 0 4px', fontSize: '1.1rem', fontWeight: 600 }}>Account Created!</h3>
+            <h3>Account Created!</h3>
             <p className="key-reveal-desc">
-              Save this API key — it will <strong>never</strong> be shown again.
+              Your workspace is ready. Save this API key — it will <strong>never</strong> be shown again.
             </p>
             <div className="key-display">
               <code>{newKey}</code>
-              <button className="btn btn-sm" onClick={copyKey}>
+              <button className="btn btn-secondary btn-sm" onClick={copyKey}>
                 {copied ? <Check size={14} /> : <Copy size={14} />}
               </button>
             </div>
             <button
               className="btn btn-primary"
               onClick={() => navigate('/dashboard')}
-              style={{ marginTop: 16, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ marginTop: 16, width: '100%' }}
             >
               Go to Dashboard <ArrowRight size={16} />
             </button>
@@ -121,7 +127,7 @@ export default function Login() {
               </div>
             )}
             <div className="form-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">Email address</label>
               <input
                 id="email"
                 type="email"
@@ -137,21 +143,24 @@ export default function Login() {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder={mode === 'register' ? 'Min 8 characters' : 'Your password'}
+                  placeholder={mode === 'register' ? 'Minimum 8 characters' : 'Enter your password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   minLength={mode === 'register' ? 8 : 1}
                   required
-                  style={{ paddingRight: '40px' }}
+                  style={{ paddingRight: '44px' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
                     position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
+                    background: 'none', border: 'none', cursor: 'pointer', padding: '6px',
                     color: '#94a3b8', display: 'flex', alignItems: 'center',
+                    borderRadius: '6px', transition: 'background 0.2s',
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -164,7 +173,6 @@ export default function Login() {
               type="submit"
               className="btn btn-primary btn-block"
               disabled={loading}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
               {loading
                 ? 'Please wait…'
@@ -178,24 +186,18 @@ export default function Login() {
 
         {/* Footer */}
         {!newKey && (
-          <div className="login-footer" style={{ marginTop: '1.25rem', textAlign: 'center' }}>
+          <div className="login-footer-text">
             {mode === 'login' ? (
-              <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+              <p>
                 Don't have an account?{' '}
-                <button
-                  onClick={() => { setMode('register'); setError(''); }}
-                  style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', padding: 0 }}
-                >
+                <button onClick={() => { setMode('register'); setError(''); }}>
                   Sign up free
                 </button>
               </p>
             ) : (
-              <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+              <p>
                 Already have an account?{' '}
-                <button
-                  onClick={() => { setMode('login'); setError(''); }}
-                  style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', padding: 0 }}
-                >
+                <button onClick={() => { setMode('login'); setError(''); }}>
                   Sign in
                 </button>
               </p>
