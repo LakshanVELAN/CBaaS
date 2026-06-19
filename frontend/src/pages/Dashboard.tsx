@@ -127,23 +127,31 @@ export default function Dashboard() {
           icon={<Trophy size={20} />}
           color="#6366f1"
         />
-        {neo4jConnected && (
+        {neo4jConnected ? (
           <>
             <StatsCard
               title="Graph Roles"
               value={graphStats!.roles}
-              subtitle="Neo4j"
+              subtitle="from Neo4j graph"
               icon={<Hexagon size={20} />}
               color="#8b5cf6"
             />
             <StatsCard
               title="Graph Pages"
               value={graphStats!.pages}
-              subtitle="Neo4j"
+              subtitle="from Neo4j graph"
               icon={<File size={20} />}
               color="#ec4899"
             />
           </>
+        ) : (
+          <StatsCard
+            title="Neo4j Graph"
+            value="—"
+            subtitle="Connect in Knowledge Base"
+            icon={<Hexagon size={20} />}
+            color="#94a3b8"
+          />
         )}
       </div>
 

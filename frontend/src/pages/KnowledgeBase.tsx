@@ -39,7 +39,7 @@ export default function KnowledgeBase() {
   const [copied, setCopied] = useState(false);
 
   // ── Active Tab ──
-  const [activeTab, setActiveTab] = useState<Tab>('training');
+  const [activeTab, setActiveTab] = useState<Tab>('neo4j');
 
   // ── Fetch ──
   const fetchEntries = () => {
@@ -205,8 +205,8 @@ export default function KnowledgeBase() {
     : entries;
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
-    { key: 'training', label: 'Page Training', icon: <BookOpen size={16} /> },
-    { key: 'neo4j', label: 'Neo4j GraphDB', icon: <Link2 size={16} /> },
+    { key: 'neo4j', label: 'Connect Neo4j', icon: <Link2 size={16} /> },
+    { key: 'training', label: 'Manual Training', icon: <BookOpen size={16} /> },
     { key: 'upload', label: 'Upload JSON', icon: <Upload size={16} /> },
     { key: 'guide', label: 'Help & Guide', icon: <Lightbulb size={16} /> },
   ];
@@ -215,7 +215,7 @@ export default function KnowledgeBase() {
     <div className="page">
       <div className="page-header">
         <h2>Knowledge Base</h2>
-        <p>Train pages, connect Neo4j GraphDB, upload knowledge, and get guided help.</p>
+        <p>Connect your Neo4j database or manually train pages — two ways to power your chatbot with knowledge.</p>
       </div>
 
       {/* ── Tab Navigation ── */}
@@ -237,13 +237,21 @@ export default function KnowledgeBase() {
           ════════════════════════════════════════ */}
       {activeTab === 'training' && (
         <>
-          <div className="card train-card">
-            <h3>Train a Page</h3>
-            <p className="card-desc">
-              Enter a URL to scrape its content and store it in the knowledge base
-              for chatbot context.
-            </p>
-            <div className="train-row">
+          <div className="card">
+            <div className="neo4j-header">
+              <div className="neo4j-title-row">
+                <h3>Manual Page Training</h3>
+                {neo4jConnected && (
+                  <span className="neo4j-status neo4j-status-connected">● Neo4j Connected</span>
+                )}
+              </div>
+              <p className="card-desc">
+                Enter a URL to scrape its content and store it in the knowledge base
+                for chatbot context. This is a manual alternative to Neo4j —
+                use either method (or both) to power your chatbot.
+              </p>
+            </div>
+            <div className="train-row" style={{ marginTop: 12 }}>
               <input
                 type="url"
                 placeholder="https://example.com/page"
@@ -359,7 +367,7 @@ export default function KnowledgeBase() {
         <div className="card">
           <div className="neo4j-header">
             <div className="neo4j-title-row">
-              <h3>🔗 Neo4j GraphDB Connection</h3>
+              <h3>Neo4j GraphDB Connection</h3>
               {neo4jLoading ? (
                 <span className="neo4j-status neo4j-status-loading">Checking…</span>
               ) : neo4jConnected ? (
@@ -369,9 +377,10 @@ export default function KnowledgeBase() {
               )}
             </div>
             <p className="card-desc">
-              Connect your own Neo4j graph database to store and query structured
-              knowledge about your application's pages, roles, and navigation.
-              The chatbot uses this to provide context-aware responses.
+              Connect your own Neo4j graph database to store structured knowledge about your
+              application's pages, roles, and navigation. Once connected, your <strong>dashboard
+              will automatically update</strong> to show Neo4j graph stats, and the chatbot will
+              use the graph for context-aware responses.
             </p>
           </div>
 
