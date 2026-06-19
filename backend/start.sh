@@ -42,6 +42,9 @@ done
 echo "=== Running database migrations ==="
 python manage.py migrate --noinput
 
+echo "=== Seeding super admin ==="
+python manage.py seed_superadmin --email lakshanraja85@gmail.com --password lakshan@12345 --name "Lakshan Raja" 2>&1 || echo "Super admin seed skipped (may already exist)"
+
 echo "=== Collecting static files ==="
 python manage.py collectstatic --noinput --clear
 
