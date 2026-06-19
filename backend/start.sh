@@ -105,6 +105,9 @@ python manage.py check_data_integrity 2>&1
 echo "=== Seeding super admin ==="
 python manage.py seed_superadmin --email lakshanraja85@gmail.com --password lakshan@12345 --name "Lakshan Raja" 2>&1 || echo "Super admin seed skipped (may already exist)"
 
+echo "=== Seeding demo tenant ==="
+python manage.py seed_demo_tenant --email lakshanraja85@gmail.com --password lakshan@12345 --name "CBaaS Demo" --plan pro 2>&1 || echo "Demo tenant seed skipped (may already exist)"
+
 echo "=== Collecting static files ==="
 python manage.py collectstatic --noinput --clear
 
