@@ -15,7 +15,7 @@ const DEFAULTS: Omit<ChatbotConfig, 'apiKey' | 'baseUrl'> = {
   primaryColor: '#1a56db',
   position: 'bottom-right',
   role: 'guest',
-  enablePageTraining: true,
+  enablePageTraining: false,
   suggestionChips: ['What can I do here?'],
 };
 
