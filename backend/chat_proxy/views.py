@@ -137,33 +137,25 @@ def chat_message(request):
         if route_from_text:
             raw_navigations.append({'url': route_from_text, 'title': route_name_from_text})
 
-        # Validate navigation URLs against knowledge base + route registry
-        valid_urls = {entry['url'] for entry in kb_entries}
-        valid_paths = {entry['path'] for entry in route_entries}
-        navigations = []
-        for nav in raw_navigations:
-            nav_url = nav.get('url', '')
-            if nav_url in valid_urls:
-                navigations.append(nav)
-            else:
-                # Check if the URL path matches a registered route
-                try:
-                    parsed = urlparse(nav_url)
-                    if parsed.path in valid_paths:
-                        navigations.append(nav)
-                except Exception:
-                    pass
-
-        # Deduplicate navigations
+        # Deduplicate and clean navigations
+        # AI-generated navigation suggestions are passed through unless
+        # they have empty/invalid URLs. No need to cross-reference against
+        # KB/route registry — the LLM gets route context and generates
+        # reasonable suggestions.
         seen_urls = set()
-        unique_navigations = []
-        for nav in navigations:
-            if nav['url'] not in seen_urls:
-                seen_urls.add(nav['url'])
-                unique_navigations.append(nav)
-        navigations = unique_navigations
+        valid_navigations = []
+        for nav in raw_navigations:
+            nav_url = nav.get('url', '').strip()
+            nav_title = nav.get('title', '').strip()
+            if not nav_url or nav_url in ('/', '#', '') or not nav_title:
+                continue
+            if nav_url not in seen_urls:
+                seen_urls.add(nav_url)
+                valid_navigations.append({'url': nav_url, 'title': nav_title})
+        navigations = valid_navigations
 
         # Pick the best navigation (first one) for the route field
+        # Never fallback to current_route — that creates dead "Open Page" pills
         best_nav = navigations[0] if navigations else None
 
         # Log message asynchronously
@@ -193,7 +185,7 @@ def chat_message(request):
 
         return Response({
             'message': response_text,
-            'route': best_nav['url'] if best_nav else current_route or None,
+            'route': best_nav['url'] if best_nav else None,
             'route_name': best_nav['title'] if best_nav else None,
             'navigations': navigations,
             'session_id': session_id,
