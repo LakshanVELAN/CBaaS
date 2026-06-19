@@ -10,7 +10,7 @@ MAX_RETRIES=10
 RETRY_DELAY=5
 echo "=== Checking database readiness ==="
 for i in $(seq 1 $MAX_RETRIES); do
-  if python -c "
+  DB_CHECK=$(python -c "
 import django, os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.production')
 import django; django.setup()
@@ -19,14 +19,20 @@ try:
     connections['default'].cursor().execute('SELECT 1')
     print('OK')
 except Exception as e:
-    print(f'FAIL:{e}')
-" 2>&1 | grep -q '^OK$'; then
+    import traceback
+    print(f'ERROR:{e}')
+    traceback.print_exc()
+" 2>&1)
+  if echo "$DB_CHECK" | grep -q '^OK$'; then
     echo "✓ Database is ready (attempt $i/$MAX_RETRIES)"
     break
   else
-    echo "✗ Database not ready (attempt $i/$MAX_RETRIES) — retrying in ${RETRY_DELAY}s..."
+    echo "✗ Database not ready (attempt $i/$MAX_RETRIES)"
+    echo "  └─ Error: $(echo "$DB_CHECK" | head -5)"
     if [ $i -eq $MAX_RETRIES ]; then
       echo "ERROR: Database did not become available after $MAX_RETRIES attempts"
+      echo "Full error:"
+      echo "$DB_CHECK"
       exit 1
     fi
     sleep $RETRY_DELAY
