@@ -122,16 +122,25 @@
 
   <!-- Chatbot SaaS Widget Embed -->
   <script>
+    // Configure the chatbot widget
+    window.ChatbotConfig = {
+      apiKey: 'test_api_key',
+      baseUrl: 'http://localhost:8000',
+      botName: 'Test Bot',
+      primaryColor: '#6366f1',
+      position: 'bottom-right',
+      welcomeMessage: 'Hi! How can I help you today?',
+      suggestionChips: ['What can I do here?', 'Show me the dashboard'],
+    };
+
+    // Set the user's role (change this for role-based testing)
+    // window.SaaS_User_Role = 'admin';
+
+    // Load the widget script
     (function() {
       var s = document.createElement('script');
       s.src = 'http://localhost:3000/widget.js';
       s.async = true;
-      s.dataset.apiKey = 'test_api_key';
-      s.dataset.theme = 'light';
-      s.dataset.position = 'bottom-right';
-      s.dataset.size = 'md';
-      s.dataset.primaryColor = '#6366f1';
-      s.dataset.botName = 'Test Bot';
       var x = document.getElementsByTagName('script')[0];
       x.parentNode.insertBefore(s, x);
     })();

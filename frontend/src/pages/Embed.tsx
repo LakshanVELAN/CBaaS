@@ -54,22 +54,45 @@ export default function Embed() {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const embedCode = `<!-- Chatbot SaaS Widget -->
+  const embedCode = `<!-- Chatbot SaaS Widget — https://cbaas-production.up.railway.app -->
 <script>
-// ⬇️ Set the user's role from your auth system (optional — defaults to 'guest')
-// window.SaaS_User_Role = 'admin';  // or 'student', 'manager', 'employer', etc.
-
+// ═══════════════════════════════════════════════════════════
+// 📋 CONFIGURATION — Customize the widget for your brand
+// ═══════════════════════════════════════════════════════════
 window.ChatbotConfig = {
+  // 🔑 Required: Your unique API key from the dashboard
   apiKey: '${apiKey || 'YOUR_API_KEY'}',
+
+  // 🌐 Required: Your backend URL (auto-detected, change if needed)
   baseUrl: '${backendUrl}',
+
+  // 🤖 Bot display name shown in the chat header
   botName: '${botName || 'Assistant'}',
+
+  // 🎨 Primary color — applies to header, buttons, and message bubbles
   primaryColor: '${primaryColor}',
+
+  // 📍 Position on the page
   position: '${position}',
+
+  // 👋 Welcome message shown when the widget opens
   welcomeMessage: '${welcomeMessage.replace(/'/g, "\\'")}',
+
+  // 💡 Suggested questions shown as clickable chips
   suggestionChips: ${JSON.stringify(suggestionChips)}
 };
+
+// ═══════════════════════════════════════════════════════════
+// 🔐 DYNAMIC ROLE DETECTION (Recommended)
+// Uncomment and set this to your logged-in user's role to
+// get role-aware responses. Options depend on your Neo4j
+// knowledge graph setup (e.g. 'admin', 'student', 'manager').
+// Defaults to 'guest' if not set.
+// ═══════════════════════════════════════════════════════════
+// window.SaaS_User_Role = 'admin';  // set dynamically from auth
 </script>
 <script src="${backendUrl}/static/widget/chatbot-widget.js" async></script>
+<!-- ═══════════════════════════════════════════════════════════ -->
 <!-- End Chatbot SaaS Widget -->`;
 
   const handleCopy = () => {
