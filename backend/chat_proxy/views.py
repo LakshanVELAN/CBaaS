@@ -250,13 +250,13 @@ def train_page(request):
 @api_view(['POST'])
 def train_page_from_widget(request):
     """
-    [Temporarily disabled] Widget auto-training has been stopped.
-    Clients should use Neo4j connection + JSON upload or manual page training instead.
+    Widget auto-training has been removed.
+    This endpoint remains as a no-op for backwards compatibility with older widget versions.
     """
-    return Response(
-        {'error': 'Widget auto-training is temporarily disabled. Use Neo4j connection or manual page training instead.'},
-        status=status.HTTP_503_SERVICE_UNAVAILABLE,
-    )
+    return Response({
+        'status': 'ok',
+        'note': 'Auto-training is no longer available. Use Neo4j connection or manual page training instead.',
+    })
 
 
 @api_view(['GET'])
