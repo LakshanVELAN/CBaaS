@@ -1,12 +1,68 @@
 #!/bin/bash
 # Production startup script for Railway
-# v2 - includes frontend_build in watch patterns
+# v3 - added DATABASE_URL safety net + data integrity check
 
 set -e
 
+# ============================================================
+# 🔒 DATABASE_URL SAFETY NET
+# Prevents deploying against a blank/wrong database.
+#
+# How it works:
+#   Set EXPECTED_DB_NAME in Railway env vars to the database
+#   name from your Neon connection string. If the current
+#   DATABASE_URL points to a different database (e.g. after
+#   a Neon branch switch or accidental env var change), the
+#   deploy will fail early with a clear message.
+#
+#   To find your DB name: look at DATABASE_URL after the last /:
+#     postgresql://user:pass@ep-example.us-east-1.aws.neon.tech/my_db
+#                                                               ^^^^^^
+#   Set EXPECTED_DB_NAME=my_db in Railway env vars.
+#
+#   Not set? The check still validates DATABASE_URL is present
+#   and looks like a real connection string.
+# ============================================================
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo "ERROR: DATABASE_URL is not set — cannot connect to any database."
+  echo "  Set DATABASE_URL in Railway env vars to your Neon PostgreSQL URL."
+  exit 1
+fi
+
+echo "=== Checking DATABASE_URL safety ==="
+
+# Extract the database name from the URL (last path segment before ?)
+CURRENT_DB_NAME=$(echo "$DATABASE_URL" | sed -n 's|.*/\([^/?]*\)\(\?.*\)*$|\1|p')
+if [ -z "$CURRENT_DB_NAME" ]; then
+  echo "⚠️  Could not parse database name from DATABASE_URL"
+  echo "   URL format: $(echo "$DATABASE_URL" | sed 's/:[^:@]*@/:****@/' | head -c 80)..."
+else
+  echo "📦 Current database: $CURRENT_DB_NAME"
+fi
+
+# If EXPECTED_DB_NAME is set, compare against current DB
+if [ -n "${EXPECTED_DB_NAME:-}" ]; then
+  if [ "$CURRENT_DB_NAME" != "$EXPECTED_DB_NAME" ]; then
+    echo "ERROR: Database name mismatch!"
+    echo "  Expected: $EXPECTED_DB_NAME  (from EXPECTED_DB_NAME env var)"
+    echo "  Current:  $CURRENT_DB_NAME   (from DATABASE_URL)"
+    echo ""
+    echo "This usually means DATABASE_URL was changed to point to a different"
+    echo "database. If this is intentional, update EXPECTED_DB_NAME in Railway"
+    echo "env vars to match the new database name."
+    exit 1
+  fi
+  echo "✅ Database name matches EXPECTED_DB_NAME — correct database confirmed"
+else
+  echo "⚠️  EXPECTED_DB_NAME not set — skipping database name check"
+  echo "   (Set EXPECTED_DB_NAME in Railway env vars for protection)"
+fi
+
+# ============================================================
 # Database readiness check with retry
-# Supabase free tier databases may pause after inactivity;
+# Neon free tier databases may pause after inactivity;
 # this loop waits for the database to become available.
+# ============================================================
 MAX_RETRIES=10
 RETRY_DELAY=5
 echo "=== Checking database readiness ==="
@@ -42,6 +98,9 @@ done
 
 echo "=== Running database migrations ==="
 python manage.py migrate --noinput
+
+echo "=== Checking data integrity ==="
+python manage.py check_data_integrity 2>&1
 
 echo "=== Seeding super admin ==="
 python manage.py seed_superadmin --email lakshanraja85@gmail.com --password lakshan@12345 --name "Lakshan Raja" 2>&1 || echo "Super admin seed skipped (may already exist)"
