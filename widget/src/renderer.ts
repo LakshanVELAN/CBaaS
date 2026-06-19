@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 const ESCAPE_MAP: Record<string, string> = {
   '&': '&amp;',
   '<': '&lt;',
@@ -10,8 +12,10 @@ function escapeHtml(str: string): string {
 }
 
 export function renderMarkdown(text: string): string {
+  // Step 1: Escape raw HTML to prevent XSS
   let html = escapeHtml(text);
 
+  // Step 2: Convert markdown syntax to HTML tags
   // Bold: **text**
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
@@ -29,6 +33,15 @@ export function renderMarkdown(text: string): string {
 
   // Line breaks
   html = html.replace(/\n/g, '<br>');
+
+  // Step 3: Sanitize the final HTML with DOMPurify (defense-in-depth)
+  // Even though we escape first, this catches any edge cases where
+  // the markdown regexes could produce unexpected output, and ensures
+  // LLM-sourced content is safe to render via innerHTML.
+  html = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['strong', 'em', 'code', 'ul', 'ol', 'li', 'br', 'p'],
+    ALLOWED_ATTR: [],  // No attributes allowed on any tag
+  });
 
   return html;
 }
