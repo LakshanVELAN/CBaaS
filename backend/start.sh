@@ -1,5 +1,6 @@
 #!/bin/bash
 # Production startup script for Railway
+# v2 - includes frontend_build in watch patterns
 
 set -e
 

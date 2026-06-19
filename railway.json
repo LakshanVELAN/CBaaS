@@ -6,7 +6,8 @@
     "watchPatterns": [
       "backend/**/*.py",
       "backend/requirements.txt",
-      "backend/start.sh"
+      "backend/start.sh",
+      "backend/frontend_build/**"
     ]
   },
   "deploy": {
