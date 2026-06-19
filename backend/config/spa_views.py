@@ -9,17 +9,40 @@ from django.utils.cache import patch_cache_control
 logger = logging.getLogger(__name__)
 
 FRONTEND_BUILD_DIR = settings.BASE_DIR / 'frontend_build'
+STATIC_ROOT = settings.BASE_DIR / 'staticfiles'
 
 
 def serve_spa(request, path=''):
     """
     Serve the React SPA's build files and fall back to index.html
     for client-side routing.
+
+    Also explicitly serves files from STATIC_ROOT for paths starting
+    with 'static/' — this handles the widget JS and other static assets
+    that WhiteNoise may not intercept before the catch-all URL pattern.
     """
-    # Try to serve the exact file requested
     if path:
+        # --- Serve from STATIC_ROOT for any static/ prefixed path ---
+        # This ensures /static/widget/chatbot-widget.js is served as JS,
+        # not swallowed by the SPA catch-all returning index.html.
+        if path.startswith('static/'):
+            static_relative = path[len('static/'):]  # strip the 'static/' prefix
+            static_file = STATIC_ROOT / static_relative
+            try:
+                static_file.relative_to(STATIC_ROOT)  # security check
+            except ValueError:
+                raise Http404("Invalid static path")
+            if static_file.exists() and static_file.is_file():
+                content_type, _ = mimetypes.guess_type(str(static_file))
+                if content_type is None:
+                    content_type = 'application/octet-stream'
+                response = FileResponse(open(static_file, 'rb'), content_type=content_type)
+                patch_cache_control(response, max_age=86400, public=True)
+                return response
+            logger.warning(f"Static file not found in STATIC_ROOT: {static_file}")
+
+        # --- Serve from frontend_build for SPA assets ---
         file_path = FRONTEND_BUILD_DIR / path
-        # Security: ensure we don't serve files outside the build directory
         try:
             file_path.relative_to(FRONTEND_BUILD_DIR)
         except ValueError:
