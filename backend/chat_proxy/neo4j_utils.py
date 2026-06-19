@@ -452,10 +452,13 @@ def upload_knowledge_to_graph(driver, tenant, knowledge_data: dict, db_name: str
     return stats
 
 
-def get_role_context_from_neo4j(driver, tenant, role_name: str, db_name: str = '') -> str:
+def get_role_context_from_neo4j(driver, tenant, role_name: str, db_name: str = '', use_tenant_filter: bool = True) -> str:
     """
     Query the Neo4j Knowledge Graph for a specific tenant and role.
     Returns formatted text for injection into the system prompt.
+
+    When use_tenant_filter is True (platform Neo4j), filters by tenant_id.
+    When False (custom Neo4j), matches role by name only.
     """
     tenant_id = str(tenant.id)
     session_db = db_name or ''
@@ -464,23 +467,41 @@ def get_role_context_from_neo4j(driver, tenant, role_name: str, db_name: str = '
     pages_data = []
     menu_data = []
 
-    pages_query = """
-    MATCH (r:Role {name: $role_name, tenant_id: $tid})-[:CAN_ACCESS]->(p:Page)
-    OPTIONAL MATCH (p)-[:HAS_ACTION]->(a:Action)
-    OPTIONAL MATCH (a)-[:NAVIGATES_TO]->(target:Page)
-    RETURN p.path as path, p.title as title, p.description as description,
-            p.visible_content as visible_content,
-            collect({id: a.id, label: a.label, description: a.action_description, navigates_to: target.path}) as actions
-    """
+    if use_tenant_filter:
+        pages_query = """
+        MATCH (r:Role {name: $role_name, tenant_id: $tid})-[:CAN_ACCESS]->(p:Page)
+        OPTIONAL MATCH (p)-[:HAS_ACTION]->(a:Action)
+        OPTIONAL MATCH (a)-[:NAVIGATES_TO]->(target:Page)
+        RETURN p.path as path, p.title as title, p.description as description,
+                p.visible_content as visible_content,
+                collect({id: a.id, label: a.label, description: a.action_description, navigates_to: target.path}) as actions
+        """
+        menu_query = """
+        MATCH (r:Role {name: $role_name, tenant_id: $tid})-[:HAS_MENU_ITEM]->(m:MenuItem)
+        OPTIONAL MATCH (m)-[:LINKED_TO]->(p:Page)
+        RETURN m.label as label, m.icon as icon, p.path as path
+        """
+    else:
+        pages_query = """
+        MATCH (r:Role {name: $role_name})-[:CAN_ACCESS]->(p:Page)
+        OPTIONAL MATCH (p)-[:HAS_ACTION]->(a:Action)
+        OPTIONAL MATCH (a)-[:NAVIGATES_TO]->(target:Page)
+        RETURN p.path as path, p.title as title, p.description as description,
+                p.visible_content as visible_content,
+                collect({id: a.id, label: a.label, description: a.action_description, navigates_to: target.path}) as actions
+        """
+        menu_query = """
+        MATCH (r:Role {name: $role_name})-[:HAS_MENU_ITEM]->(m:MenuItem)
+        OPTIONAL MATCH (m)-[:LINKED_TO]->(p:Page)
+        RETURN m.label as label, m.icon as icon, p.path as path
+        """
 
-    menu_query = """
-    MATCH (r:Role {name: $role_name, tenant_id: $tid})-[:HAS_MENU_ITEM]->(m:MenuItem)
-    OPTIONAL MATCH (m)-[:LINKED_TO]->(p:Page)
-    RETURN m.label as label, m.icon as icon, p.path as path
-    """
+    params = {'role_name': role_name}
+    if use_tenant_filter:
+        params['tid'] = tenant_id
 
     with driver.session(**session_kwargs) as session:
-        pages_result = session.run(pages_query, role_name=role_name, tid=tenant_id)
+        pages_result = session.run(pages_query, **params)
         for record in pages_result:
             pages_data.append({
                 "path": record["path"],
@@ -490,7 +511,7 @@ def get_role_context_from_neo4j(driver, tenant, role_name: str, db_name: str = '
                 "actions": record["actions"],
             })
 
-        menu_result = session.run(menu_query, role_name=role_name, tid=tenant_id)
+        menu_result = session.run(menu_query, **params)
         for record in menu_result:
             menu_data.append({
                 "label": record["label"],
@@ -535,33 +556,55 @@ def get_role_context_from_neo4j(driver, tenant, role_name: str, db_name: str = '
     return "\n".join(lines)
 
 
-def get_graph_stats(driver, tenant, db_name: str = '') -> dict:
-    """Get summary statistics for a tenant's knowledge graph."""
+def get_graph_stats(driver, tenant, db_name: str = '', use_tenant_filter: bool = True) -> dict:
+    """Get summary statistics for a tenant's knowledge graph.
+
+    When use_tenant_filter is True (default for platform Neo4j), queries filter
+    by tenant_id for multi-tenancy isolation. When False (for per-tenant custom
+    Neo4j instances), counts ALL nodes since the database belongs to that tenant alone.
+    """
     tenant_id = str(tenant.id)
     session_db = db_name or ''
     session_kwargs = {'database': session_db} if session_db else {}
 
     with driver.session(**session_kwargs) as session:
-        roles = session.run(
-            "MATCH (r:Role) WHERE r.tenant_id = $tid RETURN count(r) as count",
-            tid=tenant_id,
-        ).single()["count"]
-        pages = session.run(
-            "MATCH (p:Page) WHERE p.tenant_id = $tid RETURN count(p) as count",
-            tid=tenant_id,
-        ).single()["count"]
-        actions = session.run(
-            "MATCH (a:Action) WHERE a.tenant_id = $tid RETURN count(a) as count",
-            tid=tenant_id,
-        ).single()["count"]
-        menu_items = session.run(
-            "MATCH (m:MenuItem) WHERE m.tenant_id = $tid RETURN count(m) as count",
-            tid=tenant_id,
-        ).single()["count"]
-        relationships = session.run(
-            "MATCH (a)-[r]->(b) WHERE a.tenant_id = $tid RETURN count(r) as count",
-            tid=tenant_id,
-        ).single()["count"]
+        if use_tenant_filter:
+            roles = session.run(
+                "MATCH (r:Role) WHERE r.tenant_id = $tid RETURN count(r) as count",
+                tid=tenant_id,
+            ).single()["count"]
+            pages = session.run(
+                "MATCH (p:Page) WHERE p.tenant_id = $tid RETURN count(p) as count",
+                tid=tenant_id,
+            ).single()["count"]
+            actions = session.run(
+                "MATCH (a:Action) WHERE a.tenant_id = $tid RETURN count(a) as count",
+                tid=tenant_id,
+            ).single()["count"]
+            menu_items = session.run(
+                "MATCH (m:MenuItem) WHERE m.tenant_id = $tid RETURN count(m) as count",
+                tid=tenant_id,
+            ).single()["count"]
+            relationships = session.run(
+                "MATCH (a)-[r]->(b) WHERE a.tenant_id = $tid RETURN count(r) as count",
+                tid=tenant_id,
+            ).single()["count"]
+        else:
+            roles = session.run(
+                "MATCH (r:Role) RETURN count(r) as count"
+            ).single()["count"]
+            pages = session.run(
+                "MATCH (p:Page) RETURN count(p) as count"
+            ).single()["count"]
+            actions = session.run(
+                "MATCH (a:Action) RETURN count(a) as count"
+            ).single()["count"]
+            menu_items = session.run(
+                "MATCH (m:MenuItem) RETURN count(m) as count"
+            ).single()["count"]
+            relationships = session.run(
+                "MATCH ()-[r]->() RETURN count(r) as count"
+            ).single()["count"]
 
     return {
         "roles": roles,
@@ -570,3 +613,13 @@ def get_graph_stats(driver, tenant, db_name: str = '') -> dict:
         "menu_items": menu_items,
         "relationships": relationships,
     }
+
+
+def has_custom_driver(tenant) -> bool:
+    """Check if the tenant has a custom Neo4j connection configured."""
+    try:
+        from .models import Neo4jConfig
+        config = Neo4jConfig.objects.get(tenant=tenant)
+        return bool(config.uri) and config.is_connected
+    except Exception:
+        return False

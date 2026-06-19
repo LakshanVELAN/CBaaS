@@ -18,6 +18,7 @@ from .neo4j_utils import (
     get_role_context_from_neo4j,
     get_graph_stats,
     ensure_tenant_database,
+    has_custom_driver,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,11 +63,14 @@ def chat_message(request):
     try:
         neo4j_driver = get_tenant_driver(tenant)
         if neo4j_driver:
+            # When using a custom (per-tenant) Neo4j, don't filter by tenant_id
+            use_tenant_filter = not has_custom_driver(tenant)
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(
                     lambda: get_role_context_from_neo4j(
                         neo4j_driver, tenant, role,
-                        ensure_tenant_database(tenant)
+                        ensure_tenant_database(tenant),
+                        use_tenant_filter=use_tenant_filter,
                     )
                 )
                 neo4j_context = future.result(timeout=5)  # 5s max for Neo4j query
@@ -676,8 +680,12 @@ def graph_stats(request):
 
     db_name = ensure_tenant_database(tenant)
 
+    # When the tenant is using their own custom Neo4j instance, don't filter by
+    # tenant_id — the entire database belongs to them, so count ALL nodes.
+    use_tenant_filter = not has_custom_driver(tenant)
+
     try:
-        stats = get_graph_stats(neo4j_driver, tenant, db_name)
+        stats = get_graph_stats(neo4j_driver, tenant, db_name, use_tenant_filter=use_tenant_filter)
         return Response(stats)
     except Exception as e:
         logger.error(f"Failed to get graph stats: {e}", exc_info=True)
