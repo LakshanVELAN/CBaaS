@@ -3,6 +3,36 @@
 
 set -e
 
+# Database readiness check with retry
+# Supabase free tier databases may pause after inactivity;
+# this loop waits for the database to become available.
+MAX_RETRIES=10
+RETRY_DELAY=5
+echo "=== Checking database readiness ==="
+for i in $(seq 1 $MAX_RETRIES); do
+  if python -c "
+import django, os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.production')
+import django; django.setup()
+from django.db import connections
+try:
+    connections['default'].cursor().execute('SELECT 1')
+    print('OK')
+except Exception as e:
+    print(f'FAIL:{e}')
+" 2>&1 | grep -q '^OK$'; then
+    echo "✓ Database is ready (attempt $i/$MAX_RETRIES)"
+    break
+  else
+    echo "✗ Database not ready (attempt $i/$MAX_RETRIES) — retrying in ${RETRY_DELAY}s..."
+    if [ $i -eq $MAX_RETRIES ]; then
+      echo "ERROR: Database did not become available after $MAX_RETRIES attempts"
+      exit 1
+    fi
+    sleep $RETRY_DELAY
+  fi
+done
+
 echo "=== Running database migrations ==="
 python manage.py migrate --noinput
 
