@@ -53,7 +53,6 @@
       primaryColor: script.dataset.primaryColor || script.dataset.primarycolor || '#6366f1',
       botName: script.dataset.botName || script.dataset.botname || 'Assistant',
       size: script.dataset.size || 'md',
-      autoTrain: (script.dataset.autoTrain || script.dataset.autotrain || 'false') === 'true',
       baseUrl: (script.dataset.baseUrl || script.dataset.baseurl || baseUrl || window.location.origin).replace(/\/+$/, ''),
     };
   }
@@ -419,12 +418,6 @@
     addBotMessage('Hi! I\'m ' + config.botName + '. How can I help you today? 👋');
     state.messages.push({ role: 'bot', content: 'Hi! I\'m ' + config.botName + '. How can I help you today? 👋' });
 
-    // Auto-train the page after a short delay (only if enabled)
-    if (config.autoTrain) {
-      setTimeout(function () {
-        scanPage();
-      }, 2000);
-    }
   }
 
   // ── Toggle Widget ──
@@ -759,88 +752,6 @@
       unreadBadge.style.opacity = '0';
       unreadBadge.style.transform = 'scale(0)';
     }
-  }
-
-  // ── Track scanned routes to avoid duplicates ──
-  var scannedRoutes = {};
-
-  // ── Scan Page for Knowledge Training ──
-  function scanPage() {
-    var route = window.location.pathname;
-    if (scannedRoutes[route]) return; // Already scanned this route
-    scannedRoutes[route] = true;
-
-    var pageData = {
-      page_title: document.title,
-      url: window.location.href,
-      route: route,
-      breadcrumbs: [],
-      sections: [],
-      actions: [],
-      buttons: [],
-      forms: [],
-      instructional_text: [],
-    };
-
-    // Extract headings as sections
-    var headings = document.querySelectorAll('h1, h2, h3, h4');
-    headings.forEach(function (h) {
-      var text = (h.textContent || '').trim();
-      if (text) { pageData.sections.push(text); }
-    });
-
-    // Extract buttons
-    var buttons = document.querySelectorAll('button, a[role="button"], .btn');
-    buttons.forEach(function (btn) {
-      var text = (btn.textContent || '').trim();
-      if (text && text.length < 60) { pageData.buttons.push(text); }
-    });
-
-    // Extract instructional text
-    var paragraphs = document.querySelectorAll('p, .description, .help-text, .instruction');
-    paragraphs.forEach(function (p) {
-      var text = (p.textContent || '').trim();
-      if (text && text.length > 20 && text.length < 500) {
-        pageData.instructional_text.push(text);
-      }
-    });
-
-    // Extract forms
-    var forms = document.querySelectorAll('form');
-    forms.forEach(function (form) {
-      var formData = { action: form.action || '', method: form.method || 'get', fields: [] };
-      var inputs = form.querySelectorAll('input, select, textarea');
-      inputs.forEach(function (input) {
-        var name = input.getAttribute('name') || input.getAttribute('id') || '';
-        if (name) { formData.fields.push({ name: name, type: input.getAttribute('type') || 'text' }); }
-      });
-      if (formData.fields.length > 0) { pageData.forms.push(formData); }
-    });
-
-    // Extract breadcrumbs
-    var breadcrumbEls = document.querySelectorAll('[aria-label="breadcrumb"] a, .breadcrumb a, .breadcrumbs a, nav[aria-label="Breadcrumb"] a');
-    breadcrumbEls.forEach(function (a) {
-      var text = (a.textContent || '').trim();
-      if (text) { pageData.breadcrumbs.push(text); }
-    });
-
-    // Fire-and-forget training call
-    fetch(config.baseUrl + '/api/v1/chat/train-page-widget/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + config.apiKey,
-      },
-      body: JSON.stringify({
-        route: pageData.route,
-        role: getCurrentRole(),
-        page_knowledge: pageData,
-      }),
-      mode: 'cors',
-      credentials: 'omit',
-    }).catch(function (err) {
-      console.warn('[Chatbot Widget] Auto-training failed (non-critical):', err);
-    });
   }
 
   // ── Escape HTML ──

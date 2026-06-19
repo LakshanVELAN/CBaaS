@@ -10,21 +10,32 @@ import logging
 import concurrent.futures
 from urllib.parse import urlparse
 
-import google.generativeai as genai
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini on module load
-api_key = os.environ.get('GEMINI_API_KEY', '') or getattr(settings, 'GEMINI_API_KEY', '')
-if api_key:
-    genai.configure(api_key=api_key)
-else:
-    logger.warning("GEMINI_API_KEY not configured — Gemini calls will fail")
+# Lazy import: google.generativeai uses gRPC which can hang during
+# import in forked gunicorn workers. Configure on first use instead.
+_genai_configured = False
+
+def _ensure_genai():
+    """Lazy-import and configure google.generativeai on first use."""
+    global _genai_configured
+    if _genai_configured:
+        return
+    import google.generativeai as genai
+    api_key = os.environ.get('GEMINI_API_KEY', '') or getattr(settings, 'GEMINI_API_KEY', '')
+    if api_key:
+        genai.configure(api_key=api_key)
+    else:
+        logger.warning("GEMINI_API_KEY not configured — Gemini calls will fail")
+    _genai_configured = True
 
 
 def get_model(model_name: str = None, system_instruction: str = None):
     """Get a Gemini model instance, optionally with a system instruction."""
+    _ensure_genai()
+    import google.generativeai as genai
     name = model_name or getattr(settings, 'GEMINI_MODEL', 'gemini-2.5-flash')
     kwargs = {}
     if system_instruction:

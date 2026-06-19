@@ -7,20 +7,30 @@ its own Neo4j database.
 import os
 import time
 import logging
-from typing import Optional
 
 from django.conf import settings
-from neo4j import GraphDatabase
+
+# Lazy import: neo4j driver uses async internals that can hang during
+# import in forked gunicorn workers. Import on first use instead.
+_GraphDatabase = None
+
+
+def _get_graph_db():
+    global _GraphDatabase
+    if _GraphDatabase is None:
+        from neo4j import GraphDatabase as _GDB
+        _GraphDatabase = _GDB
+    return _GraphDatabase
 
 logger = logging.getLogger(__name__)
 
 # Global driver singleton (uses .env connection)
-_driver: Optional[GraphDatabase.driver] = None
+_driver = None
 _driver_failed = False  # Prevent repeated connection attempts after failure
 _driver_failed_at: float = 0  # Timestamp of last failure for cooldown reset
 
 
-def get_global_driver() -> Optional[GraphDatabase.driver]:
+def get_global_driver():
     """
     Get or create the global Neo4j driver from .env settings.
     This single connection manages all per-tenant databases.
@@ -47,6 +57,7 @@ def get_global_driver() -> Optional[GraphDatabase.driver]:
         return _driver
 
     try:
+        GraphDatabase = _get_graph_db()
         _driver = GraphDatabase.driver(
             uri,
             auth=(user, password),
@@ -70,7 +81,7 @@ def get_global_driver() -> Optional[GraphDatabase.driver]:
 _custom_drivers: dict = {}  # {tenant_id: driver}
 
 
-def get_tenant_driver(tenant) -> Optional[GraphDatabase.driver]:
+def get_tenant_driver(tenant):
     """
     Get the driver for a tenant. First checks for a per-tenant custom Neo4j
     connection (from Neo4jConfig), then falls back to the global platform-level Neo4j.
@@ -84,7 +95,7 @@ def get_tenant_driver(tenant) -> Optional[GraphDatabase.driver]:
     return get_global_driver()
 
 
-def get_tenant_custom_driver(tenant) -> Optional[GraphDatabase.driver]:
+def get_tenant_custom_driver(tenant):
     """
     Get a per-tenant Neo4j driver from the tenant's saved Neo4jConfig.
     Creates a new driver if one doesn't exist or if the connection parameters changed.
@@ -116,6 +127,7 @@ def get_tenant_custom_driver(tenant) -> Optional[GraphDatabase.driver]:
             pass
 
     try:
+        GraphDatabase = _get_graph_db()
         driver = GraphDatabase.driver(
             config.uri,
             auth=(config.username, config.password),

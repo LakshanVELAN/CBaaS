@@ -18,7 +18,6 @@ class ApiKeyAuthMiddleware(MiddlewareMixin):
         '/api/v1/billing/webhook/',
         '/admin/',
         '/api/v1/superadmin/',
-        '/api/v1/chat/train-page-widget/',
     ]
 
     def _authenticate_jwt(self, token):

@@ -5,7 +5,6 @@ urlpatterns = [
     # Chat endpoints
     path('message/', views.chat_message, name='chat-message'),
     path('train-page/', views.train_page, name='chat-train-page'),
-    path('train-page-widget/', views.train_page_from_widget, name='chat-train-page-widget'),
     path('knowledge-base/', views.knowledge_base_list, name='knowledge-base-list'),
     path('knowledge-base/<uuid:entry_id>/', views.knowledge_base_delete, name='knowledge-base-delete'),
     path('upload-knowledge/', views.upload_knowledge_json, name='upload-knowledge-json'),

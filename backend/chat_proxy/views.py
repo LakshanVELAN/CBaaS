@@ -243,18 +243,6 @@ def train_page(request):
     })
 
 
-@api_view(['POST'])
-def train_page_from_widget(request):
-    """
-    Widget auto-training has been removed.
-    This endpoint remains as a no-op for backwards compatibility with older widget versions.
-    """
-    return Response({
-        'status': 'ok',
-        'note': 'Auto-training is no longer available. Use Neo4j connection or manual page training instead.',
-    })
-
-
 @api_view(['GET'])
 def knowledge_base_list(request):
     """List all knowledge base entries for the tenant."""
