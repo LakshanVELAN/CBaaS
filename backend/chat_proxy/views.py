@@ -366,8 +366,98 @@ def upload_knowledge_json(request):
 
     try:
         stats = upload_knowledge_to_graph(neo4j_driver, tenant, knowledge_data, db_name)
+
+        # ── Auto-register routes, roles, and KB entries from the uploaded data ──
+        route_count = 0
+        role_count = 0
+        kb_count = 0
+
+        for role_data in knowledge_data.get('roles', []):
+            role_name = role_data.get('name', '')
+            if not role_name:
+                continue
+
+            # Create/update RoleConfig
+            RoleConfig.objects.update_or_create(
+                tenant=tenant,
+                name=role_name,
+                defaults={
+                    'display_name': role_data.get('display_name', role_name),
+                    'description': role_data.get('description', ''),
+                    'is_active': True,
+                },
+            )
+            role_count += 1
+
+            for page_data in role_data.get('pages', []):
+                page_path = page_data.get('path', '')
+                page_title = page_data.get('title', '')
+                page_desc = page_data.get('description', '')
+                if not page_path or not page_title:
+                    continue
+
+                # Create/update RouteEntry
+                RouteEntry.objects.update_or_create(
+                    tenant=tenant,
+                    path=page_path,
+                    defaults={
+                        'name': page_title,
+                        'description': page_desc,
+                        'allowed_roles': [role_name],
+                        'is_active': True,
+                    },
+                )
+                route_count += 1
+
+                # Build structured KB content
+                page_content_data = {
+                    'page_title': page_title,
+                    'route': page_path,
+                    'role': role_name,
+                    'description': page_desc,
+                    'visible_content': page_data.get('visible_content', '').split('\n') if isinstance(page_data.get('visible_content', ''), str) else page_data.get('visible_content', []),
+                    'clickable_actions': [
+                        {'label': a.get('label', ''), 'navigates_to': a.get('navigates_to', '')}
+                        for a in page_data.get('actions', [])
+                    ],
+                }
+                KnowledgeBaseEntry.objects.update_or_create(
+                    tenant=tenant,
+                    url=f"widget://{page_path}",
+                    defaults={
+                        'title': page_title,
+                        'content': json.dumps(page_content_data, indent=2),
+                        'extracted_links': [{'url': page_path, 'title': page_title}],
+                        'is_active': True,
+                    },
+                )
+                kb_count += 1
+
+        # Also register standalone pages (not tied to a role)
+        for page_data in knowledge_data.get('pages', []):
+            page_path = page_data.get('path', '')
+            page_title = page_data.get('title', '')
+            if not page_path or not page_title:
+                continue
+
+            RouteEntry.objects.update_or_create(
+                tenant=tenant,
+                path=page_path,
+                defaults={
+                    'name': page_title,
+                    'description': page_data.get('description', ''),
+                    'allowed_roles': [],  # No role restriction for standalone pages
+                    'is_active': True,
+                },
+            )
+            route_count += 1
+
+        stats['routes_registered'] = route_count
+        stats['roles_registered'] = role_count
+        stats['kb_entries_created'] = kb_count
+
         return Response({
-            'message': 'Knowledge graph updated successfully',
+            'message': 'Knowledge graph updated successfully with routes auto-registered',
             'stats': stats,
         })
     except Exception as e:
