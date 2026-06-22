@@ -18,6 +18,9 @@ urlpatterns = [
     path('roles/', views.role_config_list, name='role-config-list'),
     path('roles/<uuid:entry_id>/', views.role_config_detail, name='role-config-detail'),
 
+    # Sync routes from Neo4j
+    path('sync-routes/', views.sync_routes_from_neo4j, name='sync-routes-from-neo4j'),
+
     # Neo4j config
     path('neo4j-config/', views.neo4j_config_view, name='neo4j-config'),
     path('neo4j-test/', views.neo4j_test_connection, name='neo4j-test-connection'),

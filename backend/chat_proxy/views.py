@@ -16,6 +16,7 @@ from .neo4j_utils import (
     get_tenant_custom_driver,
     upload_knowledge_to_graph,
     get_role_context_from_neo4j,
+    get_all_pages_from_neo4j,
     get_graph_stats,
     ensure_tenant_database,
     has_custom_driver,
@@ -80,6 +81,46 @@ def chat_message(request):
     except Exception as e:
         logger.warning(f"Neo4j query failed for role {role}: {e}")
         neo4j_context = ''
+
+    # ── Auto-sync Neo4j pages into RouteEntry table ──
+    # This ensures routes from the Neo4j knowledge graph are automatically
+    # registered as valid navigation targets, without requiring manual
+    # registration on the Routes page.
+    try:
+        neo4j_driver = get_tenant_driver(tenant)
+        if neo4j_driver:
+            use_tenant_filter = not has_custom_driver(tenant)
+            neo4j_pages = get_all_pages_from_neo4j(
+                neo4j_driver, tenant,
+                ensure_tenant_database(tenant),
+                use_tenant_filter=use_tenant_filter,
+            )
+            for page in neo4j_pages:
+                path = page['path']
+                title = page['title']
+                roles = page['roles']
+                if not path:
+                    continue
+                existing = RouteEntry.objects.filter(tenant=tenant, path=path).first()
+                if existing:
+                    # Merge roles if new ones exist in Neo4j
+                    existing_roles = existing.allowed_roles or []
+                    merged_roles = list(set(existing_roles + roles))
+                    if set(existing_roles) != set(merged_roles):
+                        RouteEntry.objects.filter(tenant=tenant, path=path).update(
+                            allowed_roles=merged_roles,
+                        )
+                else:
+                    RouteEntry.objects.create(
+                        tenant=tenant,
+                        path=path,
+                        name=title,
+                        description=page.get('description', ''),
+                        allowed_roles=roles,
+                        is_active=True,
+                    )
+    except Exception as e:
+        logger.warning(f"Auto-sync routes from Neo4j failed: {e}")
 
     # Fetch knowledge base entries with URLs and titles for navigation
     # When Neo4j context is available, skip KnowledgeBase content in prompt
@@ -487,6 +528,100 @@ def upload_knowledge_json(request):
         logger.error(f"Failed to upload knowledge to graph: {e}", exc_info=True)
         return Response(
             {'error': 'upload_failed', 'detail': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(['POST'])
+def sync_routes_from_neo4j(request):
+    """
+    Manually sync all routes from the Neo4j knowledge graph into the RouteEntry table.
+    This reads every Page node from Neo4j and creates/updates corresponding RouteEntry
+    records so navigation links from the chatbot point to valid pages.
+
+    Also creates RoleConfig entries for any role found in Neo4j.
+    """
+    tenant = request.tenant
+
+    neo4j_driver = get_tenant_driver(tenant)
+    if not neo4j_driver:
+        return Response(
+            {'error': 'Neo4j is not configured for this tenant'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    db_name = ensure_tenant_database(tenant)
+    use_tenant_filter = not has_custom_driver(tenant)
+
+    try:
+        pages = get_all_pages_from_neo4j(
+            neo4j_driver, tenant, db_name,
+            use_tenant_filter=use_tenant_filter,
+        )
+
+        route_count = 0
+        role_set = set()
+
+        for page in pages:
+            path = page['path']
+            title = page['title']
+            roles = page['roles']
+            if not path:
+                continue
+
+            # Add roles to the set for role registration
+            for r in roles:
+                if r:
+                    role_set.add(r)
+
+            # Create/update RouteEntry — merge roles with existing
+            existing = RouteEntry.objects.filter(tenant=tenant, path=path).first()
+            if existing:
+                existing_roles = existing.allowed_roles or []
+                merged = list(set(existing_roles + roles))
+                RouteEntry.objects.filter(tenant=tenant, path=path).update(
+                    name=title,
+                    description=page.get('description', ''),
+                    allowed_roles=merged,
+                    is_active=True,
+                )
+            else:
+                RouteEntry.objects.create(
+                    tenant=tenant,
+                    path=path,
+                    name=title,
+                    description=page.get('description', ''),
+                    allowed_roles=roles,
+                    is_active=True,
+                )
+            route_count += 1
+
+        # Also create RoleConfig entries for any roles found in Neo4j
+        role_count = 0
+        for role_name in sorted(role_set):
+            if not role_name:
+                continue
+            RoleConfig.objects.update_or_create(
+                tenant=tenant,
+                name=role_name,
+                defaults={
+                    'display_name': role_name.title(),
+                    'description': f'Auto-synced role from Neo4j',
+                    'is_active': True,
+                },
+            )
+            role_count += 1
+
+        return Response({
+            'message': f'Synced {route_count} routes and {role_count} roles from Neo4j',
+            'routes_synced': route_count,
+            'roles_synced': role_count,
+        })
+
+    except Exception as e:
+        logger.error(f"Failed to sync routes from Neo4j: {e}", exc_info=True)
+        return Response(
+            {'error': 'sync_failed', 'detail': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 

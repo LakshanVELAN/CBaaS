@@ -627,6 +627,49 @@ def get_graph_stats(driver, tenant, db_name: str = '', use_tenant_filter: bool =
     }
 
 
+def get_all_pages_from_neo4j(driver, tenant, db_name: str = '', use_tenant_filter: bool = True) -> list:
+    """
+    Query Neo4j for ALL Page nodes belonging to the tenant, across all roles.
+    Returns a list of dicts with path, title, description, and associated roles.
+
+    When use_tenant_filter is True (platform Neo4j), filters by tenant_id.
+    When False (custom Neo4j), queries ALL pages.
+    """
+    tenant_id = str(tenant.id)
+    session_db = db_name or ''
+    session_kwargs = {'database': session_db} if session_db else {}
+
+    if use_tenant_filter:
+        query = """
+        MATCH (p:Page)
+        WHERE p.tenant_id = $tid
+        OPTIONAL MATCH (r:Role {tenant_id: $tid})-[:CAN_ACCESS]->(p)
+        RETURN DISTINCT p.path as path, p.title as title, p.description as description,
+               collect(DISTINCT r.name) as roles
+        """
+        params = {'tid': tenant_id}
+    else:
+        query = """
+        MATCH (p:Page)
+        OPTIONAL MATCH (r:Role)-[:CAN_ACCESS]->(p)
+        RETURN DISTINCT p.path as path, p.title as title, p.description as description,
+               collect(DISTINCT r.name) as roles
+        """
+        params = {}
+
+    pages = []
+    with driver.session(**session_kwargs) as session:
+        result = session.run(query, **params)
+        for record in result:
+            pages.append({
+                'path': record['path'],
+                'title': record['title'] or record['path'],
+                'description': record['description'] or '',
+                'roles': record['roles'] or [],
+            })
+    return pages
+
+
 def has_custom_driver(tenant) -> bool:
     """Check if the tenant has a custom Neo4j connection configured."""
     try:
