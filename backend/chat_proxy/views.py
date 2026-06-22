@@ -396,29 +396,52 @@ def upload_knowledge_json(request):
                 if not page_path or not page_title:
                     continue
 
-                # Create/update RouteEntry
-                RouteEntry.objects.update_or_create(
-                    tenant=tenant,
-                    path=page_path,
-                    defaults={
-                        'name': page_title,
-                        'description': page_desc,
-                        'allowed_roles': [role_name],
-                        'is_active': True,
-                    },
-                )
+                # Create/update RouteEntry — MERGE allowed_roles instead of overwriting
+                # so pages shared across multiple roles retain all role associations
+                existing_route = RouteEntry.objects.filter(
+                    tenant=tenant, path=page_path
+                ).first()
+                if existing_route:
+                    existing_allowed = existing_route.allowed_roles or []
+                    if role_name not in existing_allowed:
+                        existing_allowed.append(role_name)
+                    RouteEntry.objects.filter(tenant=tenant, path=page_path).update(
+                        name=page_title,
+                        description=page_desc,
+                        allowed_roles=existing_allowed,
+                        is_active=True,
+                    )
+                else:
+                    RouteEntry.objects.create(
+                        tenant=tenant,
+                        path=page_path,
+                        name=page_title,
+                        description=page_desc,
+                        allowed_roles=[role_name],
+                        is_active=True,
+                    )
                 route_count += 1
 
                 # Build structured KB content
+                visible_content_raw = page_data.get('visible_content', '')
+                if isinstance(visible_content_raw, str):
+                    visible_content_list = [v for v in visible_content_raw.split('\n') if v]
+                else:
+                    # It's already an array (possibly from pre-normalized data)
+                    visible_content_list = visible_content_raw or []
+
+                # Support both 'actions' (normalized key) and 'clickable_actions' (original key)
+                clickable_actions = page_data.get('actions', []) or page_data.get('clickable_actions', [])
+
                 page_content_data = {
                     'page_title': page_title,
                     'route': page_path,
                     'role': role_name,
                     'description': page_desc,
-                    'visible_content': page_data.get('visible_content', '').split('\n') if isinstance(page_data.get('visible_content', ''), str) else page_data.get('visible_content', []),
+                    'visible_content': visible_content_list,
                     'clickable_actions': [
                         {'label': a.get('label', ''), 'navigates_to': a.get('navigates_to', '')}
-                        for a in page_data.get('actions', [])
+                        for a in clickable_actions
                     ],
                 }
                 KnowledgeBaseEntry.objects.update_or_create(
@@ -727,7 +750,7 @@ def extraction_guide(request):
             '**5. Output format rules:**\n'
             '- Output a single valid JSON file only. No markdown, no explanation outside the JSON.\n'
             '- Use `_comment` keys to annotate complex sections.\n'
-            '- Every role must be a key under `\"roles\": {}` (object, not array).\n'
+            '- Every role must be a key under `"roles": {}` (object, not array).\n'
             '- Every page must have `visible_content` (array of strings) and `clickable_actions` (array of objects).\n'
             '- Clickable actions that navigate must have a `navigates_to` field set to the EXACT router path.\n'
             '- Clickable actions that trigger behavior must have an `action` field.\n'
@@ -736,36 +759,36 @@ def extraction_guide(request):
             '**6. Do not guess or hallucinate.**\n'
             '- Only document what you can verify exists in the source code.\n'
             '- If a page\'s full content is not visible, note it as '
-            '`\"description\": \"Full content not extracted — component not available\"`.\n'
+            '`"description": "Full content not extracted — component not available"`.\n'
             '- If you cannot determine the exact route path for something, use `_comment` to explain.\n\n'
             '### OUTPUT STRUCTURE\n\n'
             '```json\n'
             '{\n'
-            '  \"_meta\": { \"app\": \"<app name>\", \"extracted_from\": \"<repo name>\", \"extraction_date\": \"<today>\", \"total_roles\": <number> },\n'
-            '  \"organization_types\": { ... },\n'
-            '  \"shared_features\": { ... },\n'
-            '  \"roles\": {\n'
-            '    \"<role_id>\": {\n'
-            '      \"_comment\": \"...\",\n'
-            '      \"label\": \"...\",\n'
-            '      \"detection\": \"...\",\n'
-            '      \"home_redirect\": \"...\",\n'
-            '      \"sidebar\": { \"type\": \"...\", \"menu_items\": [...] },\n'
-            '      \"accessible_routes\": [\"...\"],\n'
-            '      \"pages\": {\n'
-            '        \"/route/path\": {\n'
-            '          \"title\": \"...\",\n'
-            '          \"description\": \"...\",\n'
-            '          \"visible_content\": [\"...\"],\n'
-            '          \"clickable_actions\": [\n'
-            '            { \"label\": \"...\", \"navigates_to\": \"...\" },\n'
-            '            { \"label\": \"...\", \"action\": \"...\" }\n'
+            '  "_meta": { "app": "<app name>", "extracted_from": "<repo name>", "extraction_date": "<today>", "total_roles": <number> },\n'
+            '  "organization_types": { ... },\n'
+            '  "shared_features": { ... },\n'
+            '  "roles": {\n'
+            '    "<role_id>": {\n'
+            '      "_comment": "...",\n'
+            '      "label": "...",\n'
+            '      "detection": "...",\n'
+            '      "home_redirect": "...",\n'
+            '      "sidebar": { "type": "...", "menu_items": [...] },\n'
+            '      "accessible_routes": ["..."],\n'
+            '      "pages": {\n'
+            '        "/route/path": {\n'
+            '          "title": "...",\n'
+            '          "description": "...",\n'
+            '          "visible_content": ["..."],\n'
+            '          "clickable_actions": [\n'
+            '            { "label": "...", "navigates_to": "..." },\n'
+            '            { "label": "...", "action": "..." }\n'
             '          ]\n'
             '        }\n'
             '      }\n'
             '    }\n'
             '  },\n'
-            '  \"navigation_flows\": { \"login_redirects\": { ... }, \"module_switches\": [...] }\n'
+            '  "navigation_flows": { "login_redirects": { ... }, "module_switches": [...] }\n'
             '}\n'
             '```\n\n'
             'Now extract the knowledge base from the repository I am providing.'
