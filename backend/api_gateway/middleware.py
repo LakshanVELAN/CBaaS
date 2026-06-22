@@ -161,8 +161,10 @@ class CorsOriginMiddleware(MiddlewareMixin):
         allowed_origins = [
             o.strip() for o in tenant.allowed_origins.split('\n') if o.strip()
         ]
-        if allowed_origins and origin not in allowed_origins:
-            return JsonResponse({'error': 'Origin not allowed'}, status=403)
+        if allowed_origins:
+            # '*' means allow all origins
+            if '*' not in allowed_origins and origin not in allowed_origins:
+                return JsonResponse({'error': 'Origin not allowed'}, status=403)
 
         # Also check API key-level overrides
         api_key = getattr(request, 'api_key', None)
@@ -170,7 +172,7 @@ class CorsOriginMiddleware(MiddlewareMixin):
             key_origins = [
                 o.strip() for o in api_key.allowed_origins.split('\n') if o.strip()
             ]
-            if key_origins and origin not in key_origins:
+            if key_origins and '*' not in key_origins and origin not in key_origins:
                 return JsonResponse(
                     {'error': 'Origin not allowed for this API key'}, status=403
                 )

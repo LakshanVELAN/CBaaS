@@ -14,7 +14,8 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '.up.railway.app,localhos
 if not any(h.endswith('.up.railway.app') or h == '.up.railway.app' for h in ALLOWED_HOSTS):
     ALLOWED_HOSTS.append('.up.railway.app')
 
-CORS_ALLOW_ALL_ORIGINS = False
+# Allow overriding CORS via env var (e.g. set to 'True' when testing local frontend against production backend)
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'False').lower() == 'true'
 
 import dj_database_url
 DATABASES = {
