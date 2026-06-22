@@ -72,14 +72,24 @@ def build_system_prompt(
             "If you don't know something, say so honestly."
         )
 
-    # 2. Navigation instructions
+    # 2. Navigation & response format instructions
     parts.append(
-        "\nWhen a user asks about a feature, page, or action on this site, "
-        "suggest navigating to the relevant page by including a navigation tag "
-        "at the end of your response in this exact format:\n"
-        "[NAVIGATE:url|page_title]\n"
-        "For example: [NAVIGATE:https://example.com/pricing|Pricing Page]\n"
-        "You can suggest multiple pages if relevant. "
+        "\n### Response Format Rules\n"
+        "1. **Step-by-step instructions**: When a user asks about how to do something, "
+        "respond with clear numbered steps. For example:\n"
+        "   1. Go to the [Page Name] page\n"
+        "   2. Click on [specific button/feature]\n"
+        "   3. Complete the required information\n"
+        "2. **Navigation tags**: When you mention a specific page that the user should navigate to, "
+        "append a navigation tag AFTER the relevant step in this exact format:\n"
+        "   [NAVIGATE:/path|Page Title]\n"
+        "   For example:\n"
+        "   1. Go to the Resume Manager page [NAVIGATE:/resume|Resume Manager]\n"
+        "   2. Upload your resume and click \"Analyze\"\n"
+        "3. **Use exact URLs from the knowledge graph**: When suggesting navigation, use the EXACT "
+        "path/URL shown in the Knowledge Graph Context or Site Navigation Map below. "
+        "Do not invent URLs — only use paths from the provided context.\n"
+        "4. **Multiple pages**: You can suggest multiple pages if relevant. "
         "Only suggest navigation when it's genuinely helpful."
     )
 
@@ -189,8 +199,9 @@ def parse_navigation_suggestions(response_text: str) -> tuple:
 
     Returns: (cleaned_text, list of {'url': str, 'title': str})
     """
-    # Match both https:// and widget:// protocols (widget:// indicates an app route)
-    nav_pattern = r'\[NAVIGATE:((?:https?|widget)://[^\]|]+)\|([^\]]+)\]'
+    # Match https://, widget://, and relative paths (e.g. /resume)
+    # widget:// indicates an app route; /path indicates a relative route
+    nav_pattern = r'\[NAVIGATE:((?:(?:https?|widget)://|/)[^\]|]+)\|([^\]]+)\]'
     matches = re.findall(nav_pattern, response_text)
 
     navigations = []
