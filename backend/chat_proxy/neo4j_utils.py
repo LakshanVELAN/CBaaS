@@ -661,11 +661,13 @@ def get_all_pages_from_neo4j(driver, tenant, db_name: str = '', use_tenant_filte
     with driver.session(**session_kwargs) as session:
         result = session.run(query, **params)
         for record in result:
+            # Filter out nulls: OPTIONAL MATCH with no results yields [null], not []
+            raw_roles = record['roles'] or []
             pages.append({
                 'path': record['path'],
                 'title': record['title'] or record['path'],
                 'description': record['description'] or '',
-                'roles': record['roles'] or [],
+                'roles': [r for r in raw_roles if r],
             })
     return pages
 
