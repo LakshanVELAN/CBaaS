@@ -137,11 +137,26 @@ def chat_message(request):
         if route_from_text:
             raw_navigations.append({'url': route_from_text, 'title': route_name_from_text})
 
-        # Deduplicate and clean navigations
-        # AI-generated navigation suggestions are passed through unless
-        # they have empty/invalid URLs. No need to cross-reference against
-        # KB/route registry — the LLM gets route context and generates
-        # reasonable suggestions.
+        # Build set of valid route paths from the route registry
+        # This ensures navigation links only point to pages that actually exist
+        valid_route_paths = set()
+        for r in route_entries:
+            path = r.get('path', '').strip()
+            if path and path not in ('/', '#', ''):
+                valid_route_paths.add(path)
+
+        # Also check Neo4j routes from knowledge base entries
+        for kb in kb_entries:
+            url = kb.get('url', '').strip()
+            # widget:///path → /path
+            if url.startswith('widget://'):
+                url = url[9:]
+            if url and url not in ('/', '#', ''):
+                valid_route_paths.add(url)
+
+        # Deduplicate, clean, and validate navigations against the route registry
+        # ONLY return navigations that point to known routes — this prevents
+        # the LLM from hallucinating paths that don't exist in the app.
         seen_urls = set()
         valid_navigations = []
         for nav in raw_navigations:
@@ -149,7 +164,14 @@ def chat_message(request):
             nav_title = nav.get('title', '').strip()
             if not nav_url or nav_url in ('/', '#', '') or not nav_title:
                 continue
-            if nav_url not in seen_urls:
+            if nav_url in seen_urls:
+                continue
+            # Strip widget:// prefix for comparison
+            clean_url = nav_url[9:] if nav_url.startswith('widget://') else nav_url
+            # Only include if route registry exists and the path matches a known route.
+            # If no routes are registered (valid_route_paths is empty), allow all
+            # navigations through as a fallback.
+            if not valid_route_paths or clean_url in valid_route_paths:
                 seen_urls.add(nav_url)
                 valid_navigations.append({'url': nav_url, 'title': nav_title})
         navigations = valid_navigations
